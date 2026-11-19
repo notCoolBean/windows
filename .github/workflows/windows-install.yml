@@ -27,12 +27,20 @@ jobs:
           if (Get-ChildItem $root -Filter *.gguf -Recurse) { throw 'Installer contains a model' }
           $link = Join-Path ([Environment]::GetFolderPath('DesktopDirectory')) '致知文章仿写.lnk'
           if (!(Test-Path $link)) { throw 'Desktop shortcut missing' }
-          $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($link)
+          $inspectionCopy = Join-Path $env:RUNNER_TEMP 'writer-shortcut.lnk'
+          Copy-Item -LiteralPath $link -Destination $inspectionCopy
+          $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($inspectionCopy)
           Write-Host "Launcher: $($shortcut.TargetPath) $($shortcut.Arguments)"
           python -c "import os,sys; assert os.path.samefile(sys.argv[1],sys.argv[2])" $shortcut.TargetPath "$root\python\python.exe"
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           $scriptPath = $shortcut.Arguments -replace '^-B\s+',''
           python -c "import os,sys; assert os.path.samefile(sys.argv[1],sys.argv[2])" $scriptPath.Trim('"') "$root\writer.py"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          Start-Process -FilePath $link
+          Start-Sleep -Seconds 3
+          $service = Get-CimInstance Win32_Process -Filter "name='python.exe'" | Where-Object { $_.ExecutablePath -eq $shortcut.TargetPath -and $_.CommandLine -like '*writer.py*' }
+          if (!$service) { throw 'Launching desktop shortcut did not start the writing service' }
+          Stop-Process -Id $service.ProcessId
       - name: Import external GGUF, reject a broken replacement, restart and generate
         shell: pwsh
         run: |
