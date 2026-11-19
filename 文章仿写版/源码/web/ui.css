@@ -15,3 +15,5 @@ button,select,textarea{font:inherit;color:inherit}button{cursor:pointer}button:d
 .tiptap p{margin:0 0 .7em}.tiptap h1,.tiptap h2{line-height:1.4;margin:.6em 0}.tiptap h1{font-size:1.65em}.tiptap h2{font-size:1.3em}.tiptap>:first-child{margin-top:0}.tiptap ul,.tiptap ol{padding-inline-start:1.8em}.tiptap li p{margin:.1em 0}.tiptap blockquote{border-left:3px solid #859c86;padding-left:.85em;margin:1em 0;color:#4b6454}
 #stream{margin:0}.paperFoot{gap:8px;flex-wrap:wrap}.paperFoot>div{flex-wrap:wrap}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}@media(max-width:710px){.desk{grid-template-columns:1fr}.paper{min-height:400px}.bar{height:50px}main{padding-top:16px}}
+
+.modelRow{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:18px}.modelRow strong{font-size:14px}.modelRow p{color:var(--muted);font-size:12px;overflow-wrap:anywhere;margin-top:3px}.modelRow button{flex:none}

@@ -5,6 +5,8 @@
 <body><header><div class="bar"><div class="brand"><b aria-hidden="true">知</b><span>致知写作</span></div><span class="offline"><i></i>本机离线</span></div></header>
 <main><h1>文章仿写</h1><div class="desk">
 <section class="setup" aria-label="仿写设置">
+<div class="modelRow"><div><strong>本地模型</strong><p id="modelState" role="status">正在读取模型状态…</p></div><button class="quiet" id="chooseModel" disabled>导入模型</button></div>
+<input id="modelFile" type="file" accept=".gguf" hidden>
 <h2>参考范文</h2>
 <div class="tabs" aria-label="范文输入方式"><button id="fileTab" aria-pressed="true">选择文件</button><button id="pasteTab" aria-pressed="false">粘贴正文</button></div>
 <div id="filePanel">

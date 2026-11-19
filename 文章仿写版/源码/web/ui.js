@@ -2,6 +2,7 @@ import {createArticleEditor, fromGeneratedText, wordDocument} from './editor.js'
 const el = id => document.getElementById(id);
 const headers = {'Content-Type':'application/json','X-Session':document.querySelector('meta[name=session]').content};
 let selected = null, mode = 'file', loading = false, controller = null;
+let modelReady = false;
 const editor = createArticleEditor(el('draft'), el('formatBar'), () => {
   el('paperState').textContent = '已编辑';
   update();
@@ -20,7 +21,8 @@ function update() {
   const busy=loading||Boolean(controller);
   for(const id of ['fileTab','pasteTab','drop','file','history','sample','topic']) el(id).disabled=busy;
   el('generate').hidden=Boolean(controller); el('stop').hidden=!controller;
-  el('generate').disabled=busy || !(mode==='file'?selected:el('sample').value.trim()) || !el('topic').value.trim();
+  el('chooseModel').disabled=busy;
+  el('generate').disabled=!modelReady || busy || !(mode==='file'?selected:el('sample').value.trim()) || !el('topic').value.trim();
   el('fileTab').setAttribute('aria-pressed',mode==='file'); el('pasteTab').setAttribute('aria-pressed',mode==='paste');
   el('filePanel').hidden=mode!=='file'; el('pastePanel').hidden=mode!=='paste';
   const generating=Boolean(controller);
@@ -31,6 +33,41 @@ function update() {
   el('copy').disabled=el('export').disabled=!text.trim()||generating;
   el('exportWord').disabled=el('export').disabled||exporting;
 }
+function showModel(model) {
+  modelReady=model.ready;
+  el('chooseModel').textContent=model.ready?'更换模型':'导入模型';
+  el('modelState').textContent=model.ready?model.name+' · 已就绪':'首次使用，请选择本机的 GGUF 语言模型。';
+}
+el('chooseModel').onclick=()=>el('modelFile').click();
+el('modelFile').onchange=async event=>{
+  const file=event.target.files[0];
+  event.target.value='';
+  if(!file || loading || controller)return;
+  const previous=el('modelState').textContent;
+  loading=true;update();status('');
+  try{
+    if(!file.name.toLowerCase().endsWith('.gguf') || await file.slice(0,4).text()!=='GGUF')
+      throw Error('请选择完整的 GGUF 语言模型。');
+    const result=await new Promise((resolve,reject)=>{
+      const request=new XMLHttpRequest();
+      request.open('POST','/model');
+      request.setRequestHeader('X-Session',headers['X-Session']);
+      request.setRequestHeader('X-Model-Name',encodeURIComponent(file.name));
+      request.responseType='json';
+      request.upload.onprogress=e=>{
+        if(e.lengthComputable)el('modelState').textContent='正在复制模型 '+Math.floor(100*e.loaded/e.total)+'%';
+      };
+      request.upload.onload=()=>{el('modelState').textContent='正在验证模型能否在本机生成文字…';};
+      request.onload=()=>request.status===200 && request.response?.ready?resolve(request.response):
+        reject(Error(request.response?.error || '模型导入失败。'));
+      request.onerror=()=>reject(Error('本地导入中断，请检查磁盘空间后重试。'));
+      el('modelState').textContent='正在复制模型…';
+      request.send(file);
+    });
+    showModel(result);status('模型已保存到本机。');
+  }catch(error){el('modelState').textContent=previous;status(error.message,true);}
+  finally{loading=false;update();}
+};
 function setSample(doc) {
   selected=doc;
   el('fileTitle').textContent=doc.title; el('fileMeta').textContent=Array.from(doc.body).length+' 字 · 点击更换';
@@ -143,6 +180,8 @@ el('exportWord').onclick=async()=>{
 };
 (async()=>{
   loading=true;update();
+  try{showModel(await (await post('modelStatus')).json());}
+  catch{el('modelState').textContent='未能读取本机模型，可重新导入。';}
   try{const rows=await (await post('history')).json();rows.reverse().forEach(addOption);el('history').value='';}
   catch{status('曾用范文暂时无法读取，仍可粘贴正文。',true);}
   finally{loading=false;update();}

@@ -1,14 +1,18 @@
 """Local single-purpose article writer. Only loopback connections are used."""
 import contextlib
+import hashlib
 import json
 import os
 from pathlib import Path
 import secrets
+import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import threading
 import time
+import urllib.parse
 import urllib.request
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -24,6 +28,7 @@ SESSION = secrets.token_urlsafe(32)
 ENGINE_KEY = secrets.token_urlsafe(32)
 GENERATION = threading.Lock()
 process = None
+loaded_path = None
 endpoint = ''
 origin = ''
 
@@ -40,13 +45,27 @@ def stop():
     process = None
 
 
-def start_engine(pulse):
-    global process, endpoint
+def active_model():
+    with contextlib.closing(rag.connect(DB)) as db:
+        row = db.execute('SELECT name, digest, size FROM writer_model WHERE id=1').fetchone()
+    if row:
+        path = DATA/'writer-models'/(row['digest']+'.gguf')
+        if path.is_file() and path.stat().st_size == row['size']:
+            return path, {'ready':True, 'name':row['name'], 'size':row['size']}
+    return None, {'ready':False}
+
+
+def start_engine(pulse, model=None):
+    global process, endpoint, loaded_path
+    if model is None:
+        model, _ = active_model()
+        if model is None:
+            raise ValueError('请先导入本地 GGUF 语言模型。')
+    if loaded_path != model:
+        stop()
     if process is None or process.poll() is not None:
-        if sys.platform == 'win32':
-            exe, model = ROOT/'runtime/llama-server.exe', ROOT/'models/model.gguf'
-        else:
-            exe, model = ROOT.parent.parent/'MacOS/llama-server', ROOT.parent/'models/model.gguf'
+        exe = ROOT/'runtime/llama-server.exe' if sys.platform == 'win32' else ROOT.parent.parent/'MacOS/llama-server'
+        loaded_path = model
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
             port = sock.getsockname()[1]
@@ -96,6 +115,46 @@ def complete(instruction, material, tokens, emit):
     if not finish:
         raise ValueError('模型输出中断，请重试。')
     return finish
+
+
+def import_model(stream, size, name):
+    if not name.lower().endswith('.gguf') or size < 24 or stream.read(4) != b'GGUF':
+        raise ValueError('请选择完整的单文件 GGUF 语言模型。')
+    directory = DATA/'writer-models'
+    directory.mkdir(parents=True, exist_ok=True)
+    if shutil.disk_usage(directory).free < size:
+        raise ValueError('本机可用磁盘空间不足以保存这个模型。')
+    digest = hashlib.sha256(b'GGUF')
+    with tempfile.NamedTemporaryFile(dir=directory, suffix='.gguf', delete=False) as temp:
+        path = Path(temp.name)
+    try:
+        with path.open('wb') as output:
+            output.write(b'GGUF')
+            remaining = size - 4
+            while remaining:
+                chunk = stream.read(min(4 << 20, remaining))
+                if not chunk:
+                    raise ValueError('文件传输中断，请重新导入。')
+                output.write(chunk)
+                digest.update(chunk)
+                remaining -= len(chunk)
+        key = digest.hexdigest()
+        target = directory/(key+'.gguf')
+        old_path, _ = active_model()
+        if target != old_path:
+            try:
+                start_engine(lambda: None, path)
+                complete('简短回答。', '你好', 1, lambda _: None)
+            except (ValueError, OSError, KeyError, IndexError) as error:
+                raise ValueError('模型未通过本机推理测试。请检查内存，并选择兼容的完整语言模型。') from error
+            finally:
+                stop()
+            path.replace(target)
+        with contextlib.closing(rag.connect(DB)) as db, db:
+            db.execute('INSERT OR REPLACE INTO writer_model VALUES (1,?,?,?)', (name,key,size))
+        return {'ready':True, 'name':name, 'size':size}
+    finally:
+        path.unlink(missing_ok=True)
 
 
 def generate(sample, topic, event):
@@ -162,16 +221,27 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_POST(self):
-        if self.path != '/api' or self.headers.get('Host') != origin[7:] or self.headers.get('Origin') != origin or self.headers.get('X-Session') != SESSION:
+        if self.path not in ('/api','/model') or self.headers.get('Host') != origin[7:] or self.headers.get('Origin') != origin or self.headers.get('X-Session') != SESSION:
             return self.send_error(403)
         try:
             size = int(self.headers.get('Content-Length', 0))
+            if self.path == '/model':
+                if not GENERATION.acquire(False):
+                    return self.respond({'error':'模型正在使用，请稍后重试。'},409)
+                try:
+                    name = Path(urllib.parse.unquote(self.headers.get('X-Model-Name',''))).name
+                    self.respond(import_model(self.rfile, size, name))
+                finally:
+                    GENERATION.release()
+                return
             if not 0 < size <= 12*1024**2:
                 raise ValueError('文件最大为 8 MB。')
             p = json.loads(self.rfile.read(size))
             action = p['action']
             with contextlib.closing(rag.connect(DB)) as db, db:
-                if action == 'history':
+                if action == 'modelStatus':
+                    _, result = active_model()
+                elif action == 'history':
                     result = [dict(r) for r in db.execute("SELECT id,title,length(body) AS size FROM docs WHERE role='范文' ORDER BY id DESC")]
                 elif action == 'sample':
                     result = sample_from_db(db, p['id'])
@@ -229,6 +299,8 @@ def run():
     DATA.mkdir(parents=True,exist_ok=True)
     with contextlib.closing(rag.connect(DB)) as db:
         rag.initialize(db)
+        db.execute('CREATE TABLE IF NOT EXISTS writer_model (id INTEGER PRIMARY KEY, name TEXT, digest TEXT, size INTEGER)')
+        db.commit()
     with ThreadingHTTPServer(('127.0.0.1',0), Handler) as server:
         origin = f'http://127.0.0.1:{server.server_port}'
         if '--app-bundle' in sys.argv:

@@ -47,7 +47,7 @@ import UniformTypeIdentifiers
     func webView(_ webView: WKWebView, runOpenPanelWith parameters: WKOpenPanelParameters,
                  initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping ([URL]?) -> Void) {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = ["docx","md","txt"].compactMap { UTType(filenameExtension: $0) }
+        panel.allowedContentTypes = ["docx","md","txt","gguf"].compactMap { UTType(filenameExtension: $0) }
         completionHandler(panel.runModal() == .OK ? panel.urls : nil)
     }
     func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String,
