@@ -1,0 +1,17 @@
+{
+  "name": "zhizhi-article-editor",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@tiptap/core": "^3.0.0",
+    "@tiptap/pm": "^3.0.0",
+    "@tiptap/starter-kit": "^3.0.0",
+    "docx": "9.16.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}
