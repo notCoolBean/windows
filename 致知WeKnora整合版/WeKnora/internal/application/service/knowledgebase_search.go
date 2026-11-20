@@ -154,6 +154,10 @@ func (s *knowledgeBaseService) ResolveEmbeddingModelKeys(ctx context.Context, kb
 	// support multiple output widths for one model name and endpoint.
 	resolvedKeys := make(map[modelRef]string, len(uniqueRefs))
 	for ref := range uniqueRefs {
+		if ref.ModelID == "" {
+			resolvedKeys[ref] = ""
+			continue
+		}
 		tenantCtx := types.WithExecutionTenant(ctx, ref.TenantID)
 		model, err := s.modelService.GetModelByID(tenantCtx, ref.ModelID)
 		if err != nil || model == nil {
@@ -513,10 +517,8 @@ func (s *knowledgeBaseService) buildRetrievalParams(
 				docVectorKBIDs = append(docVectorKBIDs, kb.ID)
 			}
 		}
-		// FAQ KBs are retrieved exclusively via the FAQ vector index and
-		// have no keyword index; only document-type KBs participate in
-		// keyword retrieval.
-		if kb.IsKeywordEnabled() && kb.Type != types.KnowledgeBaseTypeFAQ {
+		// Legacy FAQ uses its vector index. Text-only FAQ uses keyword rows.
+		if kb.IsKeywordEnabled() && (kb.Type != types.KnowledgeBaseTypeFAQ || !kb.IsVectorEnabled()) {
 			docKeywordKBIDs = append(docKeywordKBIDs, kb.ID)
 		}
 	}

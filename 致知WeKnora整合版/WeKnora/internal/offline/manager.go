@@ -303,6 +303,10 @@ func (m *Manager) start(ctx context.Context, model Model) error {
 		embeddingBatch = "512"
 	}
 	args := []string{"-m", filepath.Join(m.dir, digest+".gguf"), "--alias", "local", "--offline", "--host", "127.0.0.1", "--port", port, "--api-key", m.key, "--no-webui", "--no-agent", "--no-webui-mcp-proxy", "-np", "1", "-c", contextSize, "--no-warmup"}
+	// Keep the packaged MiniCPM-V 4.7 1B GGUF in instruct mode.
+	if digest == "f18f594747e5317ab490cff9c06339c9cfb89acbe2f02ebc48a4e167bc23576d" {
+		args = append(args, "--reasoning", "off")
+	}
 	if lowMemory {
 		args = append(args, "-t", "6", "-tb", "6")
 		if model.Kind != "Embedding" {

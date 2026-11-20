@@ -1399,7 +1399,7 @@ func (s *knowledgeService) executeFAQImport(ctx context.Context, taskID string, 
 	kb.EnsureDefaults()
 
 	// 获取embedding模型，用于后续清理索引
-	embeddingModel, err = s.modelService.GetEmbeddingModel(ctx, kb.EmbeddingModelID)
+	embeddingModel, err = indexingEmbedder(ctx, s.modelService, kb.EmbeddingModelID)
 	if err != nil {
 		return fmt.Errorf("failed to get embedding model: %w", err)
 	}
@@ -1983,7 +1983,7 @@ func (s *knowledgeService) incrementalIndexFAQEntry(
 	}
 	if len(sourceIDsToDelete) > 0 {
 		logger.Debugf(ctx, "incrementalIndexFAQEntry: deleting %d obsolete sourceIDs: %v", len(sourceIDsToDelete), sourceIDsToDelete)
-		if delErr := retrieveEngine.DeleteBySourceIDList(ctx, sourceIDsToDelete, embeddingModel.GetDimensions(), types.KnowledgeTypeFAQ); delErr != nil {
+		if delErr := retrieveEngine.DeleteBySourceIDList(ctx, sourceIDsToDelete, indexDimensions(embeddingModel), types.KnowledgeTypeFAQ); delErr != nil {
 			logger.Warnf(ctx, "incrementalIndexFAQEntry: failed to delete obsolete source IDs: %v", delErr)
 		}
 	}
@@ -2069,7 +2069,7 @@ func (s *knowledgeService) indexFAQChunks(ctx context.Context,
 	var deleteDuration time.Duration
 	if needDelete {
 		deleteStartTime := time.Now()
-		if err := retrieveEngine.DeleteByChunkIDList(ctx, chunkIDs, embeddingModel.GetDimensions(), types.KnowledgeTypeFAQ); err != nil {
+		if err := retrieveEngine.DeleteByChunkIDList(ctx, chunkIDs, indexDimensions(embeddingModel), types.KnowledgeTypeFAQ); err != nil {
 			logger.Warnf(ctx, "Delete FAQ vectors failed: %v", err)
 		}
 		deleteDuration = time.Since(deleteStartTime)
@@ -2134,7 +2134,7 @@ func (s *knowledgeService) deleteFAQChunkVectors(ctx context.Context,
 	if len(chunks) == 0 {
 		return nil
 	}
-	embeddingModel, err := s.modelService.GetEmbeddingModel(ctx, kb.EmbeddingModelID)
+	embeddingModel, err := indexingEmbedder(ctx, s.modelService, kb.EmbeddingModelID)
 	if err != nil {
 		return err
 	}
@@ -2157,7 +2157,7 @@ func (s *knowledgeService) deleteFAQChunkVectors(ctx context.Context,
 	}
 
 	size := retrieveEngine.EstimateStorageSize(ctx, embeddingModel, indexInfo)
-	if err := retrieveEngine.DeleteByChunkIDList(ctx, chunkIDs, embeddingModel.GetDimensions(), types.KnowledgeTypeFAQ); err != nil {
+	if err := retrieveEngine.DeleteByChunkIDList(ctx, chunkIDs, indexDimensions(embeddingModel), types.KnowledgeTypeFAQ); err != nil {
 		return err
 	}
 	if size > 0 {
@@ -2445,7 +2445,7 @@ func (s *knowledgeService) ProcessFAQImport(ctx context.Context, t *asynq.Task) 
 		logger.Infof(ctx, "Deleted unindexed chunks: %d", len(chunksDeleted))
 
 		// 删除索引数据
-		embeddingModel, err := s.modelService.GetEmbeddingModel(ctx, kb.EmbeddingModelID)
+		embeddingModel, err := indexingEmbedder(ctx, s.modelService, kb.EmbeddingModelID)
 		if err == nil {
 			retrieveEngine, err := retriever.CreateRetrieveEngineForKB(
 				ctx, s.retrieveEngine, s.ownership, tenantInfo.ID, kb.VectorStoreID)
@@ -2454,7 +2454,7 @@ func (s *knowledgeService) ProcessFAQImport(ctx context.Context, t *asynq.Task) 
 				for _, chunk := range chunksDeleted {
 					chunkIDs = append(chunkIDs, chunk.ID)
 				}
-				if err := retrieveEngine.DeleteByChunkIDList(ctx, chunkIDs, embeddingModel.GetDimensions(), types.KnowledgeTypeFAQ); err != nil {
+				if err := retrieveEngine.DeleteByChunkIDList(ctx, chunkIDs, indexDimensions(embeddingModel), types.KnowledgeTypeFAQ); err != nil {
 					logger.Warnf(ctx, "Failed to delete index data for chunks (may not exist): %v", err)
 				} else {
 					logger.Infof(ctx, "Successfully deleted index data for %d chunks", len(chunksDeleted))

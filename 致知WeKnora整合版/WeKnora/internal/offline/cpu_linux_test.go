@@ -37,7 +37,7 @@ func TestLinuxEngineForcesCPUDespiteInheritedGPUOptions(t *testing.T) {
 
 func TestLinuxLowMemoryProfile(t *testing.T) {
 	t.Setenv("ZZ_OFFLINE_LOW_MEMORY", "1")
-	for _, kind := range []string{"KnowledgeQA", "Embedding"} {
+	for _, kind := range []string{"KnowledgeQA", "Embedding", "VLLM"} {
 		t.Run(kind, func(t *testing.T) {
 			dir := t.TempDir()
 			engine := filepath.Join(dir, "engine")
@@ -57,7 +57,11 @@ func TestLinuxLowMemoryProfile(t *testing.T) {
 			if got := m.Catalog().Models[0].ContextWindow; got != expectedContext {
 				t.Fatalf("advertised context = %d, want %d", got, expectedContext)
 			}
-			if err := m.start(context.Background(), Model{ID: kind + "-" + strings.Repeat("a", 64), Kind: kind}); err == nil {
+			digest := strings.Repeat("a", 64)
+			if kind != "Embedding" {
+				digest = "f18f594747e5317ab490cff9c06339c9cfb89acbe2f02ebc48a4e167bc23576d"
+			}
+			if err := m.start(context.Background(), Model{ID: kind + "-" + digest, Kind: kind}); err == nil {
 				t.Fatal("exited engine reported ready")
 			}
 			log, err := os.ReadFile(filepath.Join(dir, "engine.log"))
@@ -67,6 +71,8 @@ func TestLinuxLowMemoryProfile(t *testing.T) {
 			want := []string{"\n-c\n4096\n", "\n-b\n256\n", "\n-ub\n128\n"}
 			if kind == "Embedding" {
 				want = []string{"\n-c\n512\n", "\n-b\n512\n", "\n-ub\n512\n"}
+			} else {
+				want = append(want, "\n--reasoning\noff\n")
 			}
 			for _, setting := range append(want, "\n-t\n6\n", "\n-ngl\n0\n") {
 				if !strings.Contains(string(log), setting) {

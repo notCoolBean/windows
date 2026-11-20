@@ -84,7 +84,7 @@ def mac():
     print(contents.parent)
 
 
-def windows():
+def windows(full=True):
     binary = BUILD / 'zhizhi-windows.exe'
     if not binary.is_file():
         raise RuntimeError('Windows 编译产物不存在')
@@ -102,7 +102,8 @@ def windows():
     if any(target.rglob('*.gguf')):
         raise RuntimeError('Windows 模型应放在安装器旁的 bundled-models，以避免安装器体积限制')
     subprocess.run(['makensis','-V2','-DPAYLOAD='+str(target),'-DOUTPUT='+str(DIST/'Zhizhi-WeKnora-Setup-x64.exe'),str(ROOT/'installer.nsi')],check=True)
-    windows_full()
+    if full:
+        windows_full()
 
 
 def windows_full():
@@ -129,11 +130,12 @@ def dmg():
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
-    parser.add_argument('target',choices=['office','mac','windows','windows-full','dmg'])
+    parser.add_argument('target',choices=['office','mac','windows','windows-program','windows-full','dmg'])
     args=parser.parse_args()
     DIST.mkdir(exist_ok=True)
     if args.target=='office': office_files(ROOT/'office')
     elif args.target=='mac': mac()
     elif args.target=='windows': windows()
+    elif args.target=='windows-program': windows(full=False)
     elif args.target=='windows-full': windows_full()
     else: dmg()

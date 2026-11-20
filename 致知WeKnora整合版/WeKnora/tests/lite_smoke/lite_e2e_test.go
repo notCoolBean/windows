@@ -186,22 +186,26 @@ func TestLiteEditionEndToEndSmoke(t *testing.T) {
 	require.Equal(t, "lite", sysInfo.Data.Edition)
 
 	// 2. Register loopback OpenAI-compatible Embedding and KnowledgeQA models.
-	embedModelID := createModel(t, client, baseURL, token, map[string]any{
-		"name":         "local",
-		"display_name": "Smoke Embedding",
-		"type":         "Embedding",
-		"source":       "remote",
-		"parameters": map[string]any{
-			"provider":   "generic",
-			"base_url":   models.embedURL,
-			"api_key":    models.key,
-			"interfaces": []string{"embeddings"},
-			"embedding_parameters": map[string]any{
-				"dimension": models.dimensions,
+	embedModelID := ""
+	keywordOnly := os.Getenv("ZZ_TEST_KEYWORD_ONLY") == "1" || os.Getenv("ZZ_TEST_BUNDLE") != ""
+	if !keywordOnly {
+		embedModelID = createModel(t, client, baseURL, token, map[string]any{
+			"name":         "local",
+			"display_name": "Smoke Embedding",
+			"type":         "Embedding",
+			"source":       "remote",
+			"parameters": map[string]any{
+				"provider":   "generic",
+				"base_url":   models.embedURL,
+				"api_key":    models.key,
+				"interfaces": []string{"embeddings"},
+				"embedding_parameters": map[string]any{
+					"dimension": models.dimensions,
+				},
 			},
-		},
-	})
+		})
 
+	}
 	chatModelID := createModel(t, client, baseURL, token, map[string]any{
 		"name":         "local",
 		"display_name": "Smoke Chat",
@@ -228,6 +232,7 @@ func TestLiteEditionEndToEndSmoke(t *testing.T) {
 		"name":               "Lite Smoke KB",
 		"description":        "End-to-end Lite smoke verification",
 		"embedding_model_id": embedModelID,
+		"indexing_strategy":  map[string]any{"vector_enabled": !keywordOnly, "keyword_enabled": true},
 		"summary_model_id":   chatModelID,
 		"chunking_config": map[string]any{
 			"chunk_size":    300,
@@ -326,7 +331,8 @@ func TestLiteEditionEndToEndSmoke(t *testing.T) {
 	var clonedSearchResp struct {
 		Success bool `json:"success"`
 		Data    []struct {
-			Content string `json:"content"`
+			Content     string `json:"content"`
+			KnowledgeID string `json:"knowledge_id"`
 		} `json:"data"`
 	}
 	doJSON(t, client, http.MethodPost, baseURL+"/api/v1/knowledge-search", token, map[string]any{
@@ -346,6 +352,7 @@ func TestLiteEditionEndToEndSmoke(t *testing.T) {
 	doJSON(t, client, http.MethodPost, baseURL+"/api/v1/knowledge-bases", token, map[string]any{
 		"name":               "Lite Move Target KB",
 		"embedding_model_id": embedModelID,
+		"indexing_strategy":  map[string]any{"vector_enabled": !keywordOnly, "keyword_enabled": true},
 		"summary_model_id":   chatModelID,
 	}, http.StatusCreated, &moveTargetResp)
 	moveDstKBID := moveTargetResp.Data.ID
@@ -390,6 +397,54 @@ func TestLiteEditionEndToEndSmoke(t *testing.T) {
 	}
 	moveAndVerify(kbID, moveDstKBID, "reuse_vectors", moveIDs)
 
+	// Deleted documents must also disappear from a text-only index.
+	doJSON(t, client, http.MethodDelete, baseURL+"/api/v1/knowledge/"+knowledgeID, token, nil, http.StatusOK, nil)
+	require.Eventually(t, func() bool {
+		clonedSearchResp.Data = nil
+		doJSON(t, client, http.MethodPost, baseURL+"/api/v1/knowledge-search", token, map[string]any{
+			"query": "Helios-7492", "knowledge_base_ids": []string{moveDstKBID},
+			"rerank": map[string]any{"enabled": rerankOff},
+		}, http.StatusOK, &clonedSearchResp)
+		for _, hit := range clonedSearchResp.Data {
+			if hit.KnowledgeID == knowledgeID {
+				return false
+			}
+		}
+		return true
+	}, 15*time.Second, 200*time.Millisecond)
+
+	if keywordOnly {
+		// FAQ uses the same model-free keyword index, including edits.
+		doJSON(t, client, http.MethodPost, baseURL+"/api/v1/knowledge-bases", token, map[string]any{
+			"name": "Keyword FAQ", "type": "faq", "summary_model_id": chatModelID,
+			"indexing_strategy": map[string]any{"vector_enabled": false, "keyword_enabled": true},
+		}, http.StatusCreated, &kbResp)
+		faqKB := kbResp.Data.ID
+		var entry struct {
+			Data struct {
+				SeqID int64 `json:"id"`
+			} `json:"data"`
+		}
+		doJSON(t, client, http.MethodPost, baseURL+"/api/v1/knowledge-bases/"+faqKB+"/faq/entry", token, map[string]any{
+			"standard_question": "Where is QuartzSigma located?", "answers": []string{"Room Seven"},
+		}, http.StatusOK, &entry)
+		require.NotZero(t, entry.Data.SeqID)
+		doJSON(t, client, http.MethodPut, fmt.Sprintf("%s/api/v1/knowledge-bases/%s/faq/entries/%d", baseURL, faqKB, entry.Data.SeqID), token, map[string]any{
+			"standard_question": "Where is AmberTheta located?", "answers": []string{"Room Eight"},
+		}, http.StatusOK, nil)
+		for _, query := range []string{"AmberTheta", "QuartzSigma"} {
+			clonedSearchResp.Data = nil
+			doJSON(t, client, http.MethodPost, baseURL+"/api/v1/knowledge-search", token, map[string]any{
+				"query": query, "knowledge_base_ids": []string{faqKB}, "rerank": map[string]any{"enabled": false},
+			}, http.StatusOK, &clonedSearchResp)
+			if query == "AmberTheta" {
+				require.NotEmpty(t, clonedSearchResp.Data)
+			} else {
+				require.Empty(t, clonedSearchResp.Data)
+			}
+		}
+	}
+
 	// 9. Graceful shutdown on SIGTERM must exit cleanly (code 0).
 	require.NoError(t, srvCmd.Process.Signal(syscall.SIGTERM))
 	select {
@@ -405,6 +460,12 @@ func startLoopbackOpenAIServer(t *testing.T) *httptest.Server {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/v1/embeddings", func(w http.ResponseWriter, r *http.Request) {
+		if os.Getenv("ZZ_TEST_KEYWORD_ONLY") == "1" {
+			t.Error("keyword-only knowledge base called an embedding model")
+			http.Error(w, "no embedding model installed", http.StatusServiceUnavailable)
+			return
+		}
+
 		var req struct {
 			Model string `json:"model"`
 			Input any    `json:"input"`

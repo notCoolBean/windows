@@ -1016,8 +1016,12 @@ func (kb *KnowledgeBase) IsGraphEnabled() bool {
 		kb.ExtractConfig != nil && kb.ExtractConfig.Enabled
 }
 
-// NeedsEmbeddingModel returns true if any enabled pipeline requires an embedding model.
-// Currently only vector and keyword search need embeddings.
+// NeedsSearchIndex includes both text and vector index rows.
+func (kb *KnowledgeBase) NeedsSearchIndex() bool {
+	return kb != nil && (kb.IsVectorEnabled() || kb.IsKeywordEnabled())
+}
+
+// NeedsEmbeddingModel excludes keyword indexing, which only stores text.
 func (kb *KnowledgeBase) NeedsEmbeddingModel() bool {
 	return kb != nil && kb.IndexingStrategy.NeedsEmbedding()
 }

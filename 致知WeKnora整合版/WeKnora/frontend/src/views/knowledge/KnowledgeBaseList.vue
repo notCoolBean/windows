@@ -1471,7 +1471,7 @@ const isInitialized = (kb: KB) => {
   if (!kb.summary_model_id || kb.summary_model_id === '') return false
   // Embedding model only required when RAG indexing is enabled (vector or keyword)
   const strategy = (kb as any).indexing_strategy
-  const needsEmbedding = !strategy || strategy.vector_enabled || strategy.keyword_enabled
+  const needsEmbedding = !strategy || strategy.vector_enabled
   if (needsEmbedding && (!kb.embedding_model_id || kb.embedding_model_id === '')) return false
   return true
 }

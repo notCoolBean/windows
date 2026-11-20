@@ -435,7 +435,7 @@ func (s *knowledgeService) CloneChunk(ctx context.Context, src, dst *types.Knowl
 	// VectorStore backends are not bit-compatible, so callers that allow
 	// source/target KBs to bind to different stores must perform their own
 	// cross-store migration before invoking this.
-	if len(srcTodst) == 0 || dst.EmbeddingModelID == "" {
+	if len(srcTodst) == 0 || !sourceKB.NeedsSearchIndex() {
 		return nil
 	}
 	sourceStoreID := sourceKB.VectorStoreID
@@ -444,17 +444,17 @@ func (s *knowledgeService) CloneChunk(ctx context.Context, src, dst *types.Knowl
 	if err != nil {
 		return err
 	}
-	embeddingModel, err := s.modelService.GetEmbeddingModel(ctx, dst.EmbeddingModelID)
+	embeddingModel, err := indexingEmbedder(ctx, s.modelService, dst.EmbeddingModelID)
 	if err != nil {
 		return err
 	}
 	rollbackIndices = func() error {
-		return retrieveEngine.DeleteByKnowledgeIDList(ctx, []string{dst.ID}, embeddingModel.GetDimensions(), dst.Type)
+		return retrieveEngine.DeleteByKnowledgeIDList(ctx, []string{dst.ID}, indexDimensions(embeddingModel), dst.Type)
 	}
 	if err := retrieveEngine.CopyIndices(ctx, src.KnowledgeBaseID, dst.KnowledgeBaseID,
 		map[string]string{src.ID: dst.ID},
 		srcTodst,
-		embeddingModel.GetDimensions(),
+		indexDimensions(embeddingModel),
 		dst.Type,
 	); err != nil {
 		return err
@@ -777,7 +777,7 @@ func (s *knowledgeService) cloneFAQKnowledgeBase(
 	}
 
 	// Get embedding model
-	embeddingModel, err := s.modelService.GetEmbeddingModel(ctx, dstKB.EmbeddingModelID)
+	embeddingModel, err := indexingEmbedder(ctx, s.modelService, dstKB.EmbeddingModelID)
 	if err != nil {
 		logger.Errorf(ctx, "Failed to get embedding model: %v", err)
 		handleError(progress, err, "Failed to get embedding model")
@@ -789,7 +789,7 @@ func (s *knowledgeService) cloneFAQKnowledgeBase(
 	// Delete FAQ chunks that don't exist in source
 	if len(chunksToDelete) > 0 {
 		// Delete from vector store
-		if err := retrieveEngine.DeleteByChunkIDList(ctx, chunksToDelete, embeddingModel.GetDimensions(), types.KnowledgeTypeFAQ); err != nil {
+		if err := retrieveEngine.DeleteByChunkIDList(ctx, chunksToDelete, indexDimensions(embeddingModel), types.KnowledgeTypeFAQ); err != nil {
 			logger.Errorf(ctx, "Failed to delete FAQ chunks from vector store: %v", err)
 			handleError(progress, err, "Failed to delete FAQ entries from vector store")
 			return err
@@ -1499,7 +1499,7 @@ func (s *knowledgeService) moveKnowledgeReuseVectors(
 	for _, chunk := range oldChunks {
 		chunkIDs = append(chunkIDs, chunk.ID)
 	}
-	if knowledge.EmbeddingModelID != "" {
+	if knowledge.EmbeddingModelID != "" || sourceKB.NeedsSearchIndex() {
 		engine, err := retriever.CreateRetrieveEngineForKB(
 			ctx,
 			s.retrieveEngine,
@@ -1510,7 +1510,7 @@ func (s *knowledgeService) moveKnowledgeReuseVectors(
 		if err != nil {
 			return err
 		}
-		model, err := s.modelService.GetEmbeddingModel(ctx, knowledge.EmbeddingModelID)
+		model, err := indexingEmbedder(ctx, s.modelService, knowledge.EmbeddingModelID)
 		if err != nil {
 			return err
 		}
@@ -1521,7 +1521,7 @@ func (s *knowledgeService) moveKnowledgeReuseVectors(
 			targetKB.ID,
 			knowledge.ID,
 			chunkIDs,
-			model.GetDimensions(),
+			indexDimensions(model),
 			sourceKB.Type); err != nil {
 			return err
 		}

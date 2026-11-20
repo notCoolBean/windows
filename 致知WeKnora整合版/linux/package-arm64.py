@@ -14,7 +14,7 @@ from package import common
 
 BUILD = ROOT / '.build-tools/kylin-arm64'
 PAYLOAD = BUILD / 'payload'
-OUTPUT = ROOT / 'dist/麒麟V10-飞腾ARM64'
+OUTPUT = ROOT / 'dist/联想-麒麟V10-ARM64-MiniCPM-V4.7-1B'
 SYSTEM_LIBS = {'libc.so.6', 'libm.so.6', 'libpthread.so.0', 'libdl.so.2',
                'librt.so.1', 'libresolv.so.2', 'libutil.so.1', 'ld-linux-aarch64.so.1'}
 

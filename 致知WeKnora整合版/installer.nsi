@@ -35,14 +35,12 @@ Function CheckWebView
 FunctionEnd
 Section
   ; Reserve space for the external model payload as well as embedded files.
-  AddSize 5600000
+  AddSize 1750000
   IfFileExists "$EXEDIR\bundled-models\manifest.json" 0 missing_models
-  IfFileExists "$EXEDIR\bundled-models\Qwen3-4B-Instruct-2507-Q4_K_M.gguf" 0 missing_models
-  IfFileExists "$EXEDIR\bundled-models\MiniCPM-V4-Q4.gguf" 0 missing_models
-  IfFileExists "$EXEDIR\bundled-models\MiniCPM-V4-mmproj.gguf" 0 missing_models
-  IfFileExists "$EXEDIR\bundled-models\bge-small-zh-v1.5-f16.gguf" models_ready missing_models
+  IfFileExists "$EXEDIR\bundled-models\MiniCPM-V-4_7-1B-Q4_K_M.gguf" 0 missing_models
+  IfFileExists "$EXEDIR\bundled-models\mmproj-model-f16.gguf" models_ready missing_models
   missing_models:
-    MessageBox MB_ICONSTOP "请先完整解压 Windows-Full 安装包，保持 bundled-models 文件夹与安装器在同一目录，再运行安装器。" /SD IDOK
+    MessageBox MB_ICONSTOP "请先解压独立的 MiniCPM-V 4.7 1B 模型包，保持 bundled-models 文件夹与安装器在同一目录，再运行安装器。" /SD IDOK
     SetErrorLevel 1
     Abort
   models_ready:

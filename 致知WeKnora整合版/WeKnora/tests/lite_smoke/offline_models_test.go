@@ -38,18 +38,11 @@ func startSmokeModels(t *testing.T) smokeModels {
 	defer cancel()
 	catalog, err := manager.InstallBundle(ctx, dir)
 	require.NoError(t, err)
-	require.Len(t, catalog.Models, 3)
+	require.Len(t, catalog.Models, 2)
 	again, err := manager.InstallBundle(ctx, dir)
 	require.NoError(t, err)
 	require.Equal(t, catalog.Models, again.Models, "repeated startup must not duplicate models")
 	result := smokeModels{chatURL: catalog.BaseURL + "/primary/v1", key: catalog.Key}
-	for _, model := range catalog.Models {
-		if model.Kind == "Embedding" {
-			result.embedURL = catalog.BaseURL + "/" + model.ID + "/v1"
-			result.dimensions = model.Dimension
-		}
-	}
-	require.Equal(t, 512, result.dimensions)
 	// Exercise the mmproj path with actual pixels rather than a text-only probe.
 	img := image.NewRGBA(image.Rect(0, 0, 128, 128))
 	for y := 0; y < 128; y++ {
@@ -83,7 +76,7 @@ func startSmokeModels(t *testing.T) smokeModels {
 	require.NoError(t, json.Unmarshal(raw, &answer))
 	require.NotEmpty(t, answer.Choices)
 	require.Contains(t, answer.Choices[0].Message.Content, "红")
-	t.Logf("Real vision answer: %s; embedding dimensions: %d", answer.Choices[0].Message.Content, result.dimensions)
+	t.Logf("Real vision answer: %s", answer.Choices[0].Message.Content)
 	if script := os.Getenv("ZZ_TEST_OFFICE_SCRIPT"); script != "" {
 		command := exec.CommandContext(ctx, "python3", "-m", "unittest", "-v", "test_office.OfficeBridgeTest.test_actual_models")
 		command.Dir = filepath.Dir(script)

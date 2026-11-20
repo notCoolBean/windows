@@ -1,0 +1,18 @@
+{
+  "model": "openbmb/MiniCPM-V-4.7-1B-gguf",
+  "revision": "e81247fa2eac0d99e43aeac55da199221959af15",
+  "url": "https://huggingface.co/openbmb/MiniCPM-V-4.7-1B-gguf/tree/e81247fa2eac0d99e43aeac55da199221959af15",
+  "quantization": "Q4_K_M",
+  "files": [
+    {
+      "file": "MiniCPM-V-4_7-1B-Q4_K_M.gguf",
+      "size": 672003680,
+      "sha256": "f18f594747e5317ab490cff9c06339c9cfb89acbe2f02ebc48a4e167bc23576d"
+    },
+    {
+      "file": "mmproj-model-f16.gguf",
+      "size": 1110117984,
+      "sha256": "fb9cc047a3cdad5317fd8433a4aeda2d22f00f02ca4bd93b34ad84165b25a900"
+    }
+  ]
+}

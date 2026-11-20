@@ -70,9 +70,12 @@ func (v *KeywordsVectorHybridRetrieveEngineService) Retrieve(ctx context.Context
 func (v *KeywordsVectorHybridRetrieveEngineService) Index(ctx context.Context,
 	embedder embedding.Embedder, indexInfo *types.IndexInfo, retrieverTypes []types.RetrieverType,
 ) error {
+	if embedder == nil && !slices.Contains(retrieverTypes, types.KeywordsRetrieverType) {
+		return fmt.Errorf("vector indexing requires an embedding model")
+	}
 	params := make(map[string]any)
 	embeddingMap := make(map[string][]float32)
-	if slices.Contains(retrieverTypes, types.VectorRetrieverType) {
+	if embedder != nil && slices.Contains(retrieverTypes, types.VectorRetrieverType) {
 		embedding, err := embedder.Embed(ctx, sanitizeForEmbedding(ctx, indexInfo.Content))
 		if err != nil {
 			return err
@@ -91,8 +94,11 @@ func (v *KeywordsVectorHybridRetrieveEngineService) BatchIndex(ctx context.Conte
 	if len(indexInfoList) == 0 {
 		return nil
 	}
+	if embedder == nil && !slices.Contains(retrieverTypes, types.KeywordsRetrieverType) {
+		return fmt.Errorf("vector indexing requires an embedding model")
+	}
 
-	if slices.Contains(retrieverTypes, types.VectorRetrieverType) {
+	if embedder != nil && slices.Contains(retrieverTypes, types.VectorRetrieverType) {
 		const (
 			batchSize      = 40
 			maxConcurrency = 5
@@ -297,7 +303,7 @@ func (v *KeywordsVectorHybridRetrieveEngineService) EstimateStorageSize(
 	retrieverTypes []types.RetrieverType,
 ) int64 {
 	params := make(map[string]any)
-	if slices.Contains(retrieverTypes, types.VectorRetrieverType) {
+	if embedder != nil && slices.Contains(retrieverTypes, types.VectorRetrieverType) {
 		embeddingMap := make(map[string][]float32)
 		// just for estimate storage size
 		for _, indexInfo := range indexInfoList {

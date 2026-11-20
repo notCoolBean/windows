@@ -47,15 +47,15 @@
                 data-guide="kb-create-indexing">
                 <div
                   class="indexing-check-item"
-                  :class="{ 'is-checked': formData.indexingStrategy.vectorEnabled, 'is-disabled': isIndexingLocked }"
+                  :class="{ 'is-checked': formData.indexingStrategy.vectorEnabled || formData.indexingStrategy.keywordEnabled, 'is-disabled': isIndexingLocked }"
                   @click="toggleVectorIndexing"
                 >
                   <t-checkbox
-                    :checked="formData.indexingStrategy.vectorEnabled"
+                    :checked="formData.indexingStrategy.vectorEnabled || formData.indexingStrategy.keywordEnabled"
                     :disabled="isIndexingLocked"
                     class="indexing-check-box"
-                  >{{ $t('knowledgeEditor.indexing.searchTitle') }}</t-checkbox>
-                  <p class="indexing-check-desc">{{ $t('knowledgeEditor.indexing.searchDesc') }}</p>
+                  >{{ authStore.isLiteMode ? '关键词检索' : $t('knowledgeEditor.indexing.searchTitle') }}</t-checkbox>
+                  <p class="indexing-check-desc">{{ authStore.isLiteMode ? '按词语匹配资料，无需向量模型。' : $t('knowledgeEditor.indexing.searchDesc') }}</p>
                 </div>
                 <div
                   class="indexing-check-item"
@@ -260,7 +260,7 @@
           :config="formData.modelConfig"
           :has-files="hasFiles"
           :wiki-enabled="formData.indexingStrategy?.wikiEnabled"
-          :rag-enabled="formData.indexingStrategy?.vectorEnabled || formData.indexingStrategy?.keywordEnabled"
+          :rag-enabled="formData.indexingStrategy?.vectorEnabled"
           :all-models="allModels"
           @update:config="handleModelConfigUpdate"
         />
@@ -556,7 +556,7 @@
           :question-generation="formData.questionGenerationConfig"
           :auto-tag="formData.autoTagConfig"
                     :profile-config="formData.profileConfig"
-          :rag-enabled="formData.indexingStrategy?.vectorEnabled || formData.indexingStrategy?.keywordEnabled"
+          :rag-enabled="formData.indexingStrategy?.vectorEnabled"
           :all-models="allModels"
           :table-metadata-instructions="formData.chunkingConfig.tableMetadataInstructions"
           @update:question-generation="handleQuestionGenerationUpdate"
@@ -912,7 +912,7 @@ const isFAQ = computed(() => formData.value?.type === 'faq')
 const kbCreateNeedsEmbedding = computed(() => {
   if (!formData.value || formData.value.type === 'faq') return false
   const s = formData.value.indexingStrategy
-  return Boolean(s?.vectorEnabled || s?.keywordEnabled)
+  return Boolean(s?.vectorEnabled)
 })
 
 const applyDefaultModelsIfEmpty = () => {
@@ -1052,7 +1052,7 @@ const initFormData = (type: 'document' | 'faq' = 'document') => {
       extractionInstructions: '',
     },
     indexingStrategy: {
-      vectorEnabled: true,
+      vectorEnabled: !authStore.isLiteMode,
       keywordEnabled: true,
       wikiEnabled: false,
       graphEnabled: false,
@@ -1309,8 +1309,8 @@ const isIndexingLocked = computed(() => editorMode.value === 'edit' && hasFiles.
 const toggleVectorIndexing = () => {
   if (!formData.value) return
   if (isIndexingLocked.value) return
-  const next = !formData.value.indexingStrategy.vectorEnabled
-  formData.value.indexingStrategy.vectorEnabled = next
+  const next = !(formData.value.indexingStrategy.vectorEnabled || formData.value.indexingStrategy.keywordEnabled)
+  formData.value.indexingStrategy.vectorEnabled = authStore.isLiteMode ? false : next
   formData.value.indexingStrategy.keywordEnabled = next
 }
 
@@ -1509,7 +1509,7 @@ const validateForm = (): boolean => {
   }
 
   // 验证模型配置 - embedding 模型仅在检索索引启用时必须
-  const needsEmbedding = formData.value.indexingStrategy?.vectorEnabled || formData.value.indexingStrategy?.keywordEnabled
+  const needsEmbedding = formData.value.indexingStrategy?.vectorEnabled
   if (needsEmbedding && !formData.value.modelConfig.embeddingModelId) {
     MessagePlugin.warning(t('knowledgeEditor.indexing.embeddingRequired'))
     currentSection.value = 'models'

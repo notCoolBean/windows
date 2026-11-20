@@ -1190,12 +1190,12 @@ func (s *knowledgeBaseService) ProcessKBDelete(ctx context.Context, t *asynq.Tas
 			}
 
 			for key, knowledgeGroup := range embeddingGroups {
-				embeddingModel, err := s.modelService.GetEmbeddingModel(ctx, key.EmbeddingModelID)
+				embeddingModel, err := indexingEmbedder(ctx, s.modelService, key.EmbeddingModelID)
 				if err != nil {
 					logger.Warnf(ctx, "Failed to get embedding model %s: %v", key.EmbeddingModelID, err)
 					continue
 				}
-				if err := retrieveEngine.DeleteByKnowledgeIDList(ctx, knowledgeGroup, embeddingModel.GetDimensions(), key.Type); err != nil {
+				if err := retrieveEngine.DeleteByKnowledgeIDList(ctx, knowledgeGroup, indexDimensions(embeddingModel), key.Type); err != nil {
 					logger.Warnf(ctx, "Failed to delete embeddings for model %s: %v", key.EmbeddingModelID, err)
 				}
 			}

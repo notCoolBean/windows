@@ -572,7 +572,7 @@ func (s *knowledgeService) processChunks(ctx context.Context,
 		return nil
 	}
 
-	// Get embedding model for vectorization — only needed when vector/keyword indexing is enabled
+	// Get embedding model for vectorization — only needed when vector indexing is enabled
 	var embeddingModel embedding.Embedder
 	if kb.NeedsEmbeddingModel() {
 		var err error
@@ -592,7 +592,7 @@ func (s *knowledgeService) processChunks(ctx context.Context,
 			return s.failKnowledgeOnEmbeddingModel(ctx, kb, knowledge, err)
 		}
 	} else {
-		logger.Infof(ctx, "Vector/keyword indexing disabled for KB %s, skipping embedding model", kb.ID)
+		logger.Infof(ctx, "Vector indexing disabled for KB %s, skipping embedding model", kb.ID)
 	}
 
 	// Resolve the vector store before deleting anything: failing after the
@@ -600,7 +600,7 @@ func (s *knowledgeService) processChunks(ctx context.Context,
 	tenantInfo := ctx.Value(types.TenantInfoContextKey).(*types.Tenant)
 	retrieveEngine, err := retriever.CreateRetrieveEngineForKB(
 		ctx, s.retrieveEngine, s.ownership, tenantInfo.ID, kb.VectorStoreID)
-	if err != nil && embeddingModel != nil {
+	if err != nil && kb.NeedsSearchIndex() {
 		// Indexing below dereferences the engine; a nil one would panic.
 		logger.Errorf(ctx, "processChunks resolve vector store for KB %s failed: %v", kb.ID, err)
 		if errors.Is(err, retriever.ErrVectorStoreUnavailable) {
@@ -636,9 +636,9 @@ func (s *knowledgeService) processChunks(ctx context.Context,
 	if hadPreviousContent && previousEmbeddingModelID != "" &&
 		(embeddingModel == nil || previousEmbeddingModelID != kb.EmbeddingModelID) &&
 		s.modelService != nil && retrieveEngine != nil {
-		if prevModel, modelErr := s.modelService.GetEmbeddingModel(ctx, previousEmbeddingModelID); modelErr != nil {
+		if prevModel, modelErr := indexingEmbedder(ctx, s.modelService, previousEmbeddingModelID); modelErr != nil {
 			logger.Warnf(ctx, "Failed to resolve previous embedding model %s during index swap: %v", previousEmbeddingModelID, modelErr)
-		} else if prevModel != nil && (embeddingModel == nil || prevModel.GetDimensions() != embeddingModel.GetDimensions()) {
+		} else if prevModel != nil && (embeddingModel == nil || prevModel.GetDimensions() != indexDimensions(embeddingModel)) {
 			if delErr := retrieveEngine.DeleteByKnowledgeIDList(ctx, []string{knowledge.ID}, prevModel.GetDimensions(), knowledge.Type); delErr != nil {
 				logger.Warnf(ctx, "Failed to delete previous embedding model index data for %s: %v", knowledge.ID, delErr)
 			}
@@ -646,8 +646,8 @@ func (s *knowledgeService) processChunks(ctx context.Context,
 	}
 
 	// 删除旧的索引数据 — only when vector/keyword indexing is enabled
-	if embeddingModel != nil {
-		if err := retrieveEngine.DeleteByKnowledgeIDList(ctx, []string{knowledge.ID}, embeddingModel.GetDimensions(), knowledge.Type); err != nil {
+	if kb.NeedsSearchIndex() {
+		if err := retrieveEngine.DeleteByKnowledgeIDList(ctx, []string{knowledge.ID}, indexDimensions(embeddingModel), knowledge.Type); err != nil {
 			logger.Warnf(ctx, "Failed to delete existing index data (may not exist): %v", err)
 			// 不返回错误，继续处理（可能没有旧数据）
 		} else {
@@ -855,12 +855,12 @@ func (s *knowledgeService) processChunks(ctx context.Context,
 	// Create index information and perform vector indexing — only when vector/keyword is enabled.
 	// Chunks are ALWAYS saved to DB (above) because wiki and graph need them even without vector indexing.
 	var totalStorageSize int64
-	if kb.NeedsEmbeddingModel() && embeddingModel != nil {
+	if kb.NeedsSearchIndex() {
 		embedInput := types.JSONMap{
 			"chunks_to_embed": len(textChunks),
 			"model_id":        kb.EmbeddingModelID,
 		}
-		if dim := embeddingModel.GetDimensions(); dim > 0 {
+		if dim := indexDimensions(embeddingModel); dim > 0 {
 			embedInput["dim"] = dim
 		}
 		s.beginStage(ctx, knowledge.ID, types.StageEmbedding, embedInput)
@@ -955,7 +955,7 @@ func (s *knowledgeService) processChunks(ctx context.Context,
 
 			// delete index
 			if err := retrieveEngine.DeleteByKnowledgeIDList(
-				ctx, []string{knowledge.ID}, embeddingModel.GetDimensions(), kb.Type,
+				ctx, []string{knowledge.ID}, indexDimensions(embeddingModel), kb.Type,
 			); err != nil {
 				logger.Errorf(ctx, "Delete index failed: %v", err)
 			}
@@ -994,7 +994,7 @@ func (s *knowledgeService) processChunks(ctx context.Context,
 				if err := s.chunkRepo.DeleteChunksByKnowledgeID(ctx, knowledge.TenantID, knowledge.ID); err != nil {
 					logger.Warnf(ctx, "Failed to cleanup chunks after deletion detected: %v", err)
 				}
-				if err := retrieveEngine.DeleteByKnowledgeIDList(ctx, []string{knowledge.ID}, embeddingModel.GetDimensions(), kb.Type); err != nil {
+				if err := retrieveEngine.DeleteByKnowledgeIDList(ctx, []string{knowledge.ID}, indexDimensions(embeddingModel), kb.Type); err != nil {
 					logger.Warnf(ctx, "Failed to cleanup index after deletion detected: %v", err)
 				}
 			}
@@ -1891,7 +1891,7 @@ func (s *knowledgeService) ProcessSummaryGeneration(ctx context.Context, t *asyn
 
 	// Create summary chunk and index it — only when RAG indexing is enabled.
 	// Wiki-only KBs don't need summary chunks in the vector index.
-	if strings.TrimSpace(summary) != "" && kb.NeedsEmbeddingModel() {
+	if strings.TrimSpace(summary) != "" && kb.NeedsSearchIndex() {
 		// Get max chunk index
 		maxChunkIndex := 0
 		for _, chunk := range chunks {
@@ -1945,7 +1945,7 @@ func (s *knowledgeService) ProcessSummaryGeneration(ctx context.Context, t *asyn
 			return fmt.Errorf("failed to init retrieve engine: %w", err)
 		}
 
-		embeddingModel, err := s.modelService.GetEmbeddingModel(ctx, kb.EmbeddingModelID)
+		embeddingModel, err := indexingEmbedder(ctx, s.modelService, kb.EmbeddingModelID)
 		if err != nil {
 			logger.Errorf(ctx, "Failed to get embedding model: %v", err)
 			summaryErr = err
@@ -2235,7 +2235,7 @@ func (s *knowledgeService) processQuestionGenerationForKnowledge(ctx context.Con
 	resolvedModelID = questionModelID
 
 	// Initialize embedding model and retrieval engine
-	embeddingModel, err := s.modelService.GetEmbeddingModel(ctx, kb.EmbeddingModelID)
+	embeddingModel, err := indexingEmbedder(ctx, s.modelService, kb.EmbeddingModelID)
 	if err != nil {
 		exitStatus = "get_embedding_model_failed"
 		logger.Errorf(ctx, "Failed to get embedding model: %v", err)
@@ -2564,7 +2564,7 @@ func (s *knowledgeService) processQuestionGenerationForChunks(ctx context.Contex
 	}
 	resolvedModelID = questionModelID
 
-	embeddingModel, err := s.modelService.GetEmbeddingModel(ctx, kb.EmbeddingModelID)
+	embeddingModel, err := indexingEmbedder(ctx, s.modelService, kb.EmbeddingModelID)
 	if err != nil {
 		exitStatus = "get_embedding_model_failed"
 		logger.Errorf(ctx, "Failed to get embedding model: %v", err)
@@ -3071,7 +3071,7 @@ func (s *knowledgeService) RegenerateKnowledgeSummary(
 	}
 	summaryChunkContent := buildSummaryChunkContent(summary, summaryResult.Profile)
 	defer func() { _ = requestKnowledgeBaseProfileRefresh(ctx, s.task, kb, false) }()
-	if kb.NeedsEmbeddingModel() {
+	if kb.NeedsSearchIndex() {
 		maxIndex := 0
 		for _, chunk := range allChunks {
 			if chunk.ChunkIndex > maxIndex {
@@ -3600,10 +3600,10 @@ func (s *knowledgeService) updateChunkVector(ctx context.Context, kbID string, c
 	if err != nil {
 		return err
 	}
-	if !sourceKB.NeedsEmbeddingModel() {
+	if !sourceKB.NeedsSearchIndex() {
 		return nil
 	}
-	embeddingModel, err := s.modelService.GetEmbeddingModel(ctx, sourceKB.EmbeddingModelID)
+	embeddingModel, err := indexingEmbedder(ctx, s.modelService, sourceKB.EmbeddingModelID)
 	if err != nil {
 		return err
 	}
@@ -3669,7 +3669,7 @@ func (s *knowledgeService) updateChunkVector(ctx context.Context, kbID string, c
 	}
 
 	// Delete old vector representation of the chunk
-	err = retrieveEngine.DeleteByChunkIDList(ctx, ids, embeddingModel.GetDimensions(), sourceKB.Type)
+	err = retrieveEngine.DeleteByChunkIDList(ctx, ids, indexDimensions(embeddingModel), sourceKB.Type)
 	if err != nil {
 		return err
 	}

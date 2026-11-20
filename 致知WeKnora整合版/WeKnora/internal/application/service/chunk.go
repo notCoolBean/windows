@@ -825,10 +825,10 @@ func (s *chunkService) syncChunkIndex(ctx context.Context, chunk *types.Chunk) e
 	if err != nil {
 		return err
 	}
-	if !kb.NeedsEmbeddingModel() {
+	if !kb.NeedsSearchIndex() {
 		return nil
 	}
-	embedder, err := s.modelService.GetEmbeddingModel(ctx, kb.EmbeddingModelID)
+	embedder, err := indexingEmbedder(ctx, s.modelService, kb.EmbeddingModelID)
 	if err != nil {
 		return err
 	}
@@ -841,7 +841,7 @@ func (s *chunkService) syncChunkIndex(ctx context.Context, chunk *types.Chunk) e
 		// would replace it with the caption's. Only the enabled flag follows.
 		return engine.BatchUpdateChunkEnabledStatus(ctx, map[string]bool{chunk.ID: chunk.IsEnabled})
 	}
-	if err := engine.DeleteByChunkIDList(ctx, []string{chunk.ID}, embedder.GetDimensions(), kb.Type); err != nil {
+	if err := engine.DeleteByChunkIDList(ctx, []string{chunk.ID}, indexDimensions(embedder), kb.Type); err != nil {
 		return err
 	}
 	if !chunk.IsEnabled {
@@ -997,7 +997,7 @@ func (s *chunkService) DeleteGeneratedQuestion(ctx context.Context, chunkID stri
 		return fmt.Errorf("failed to create retrieve engine: %w", err)
 	}
 
-	embeddingModel, err := s.modelService.GetEmbeddingModel(ctx, kb.EmbeddingModelID)
+	embeddingModel, err := indexingEmbedder(ctx, s.modelService, kb.EmbeddingModelID)
 	if err != nil {
 		logger.ErrorWithFields(ctx, err, map[string]interface{}{
 			"embedding_model_id": kb.EmbeddingModelID,
@@ -1006,7 +1006,7 @@ func (s *chunkService) DeleteGeneratedQuestion(ctx context.Context, chunkID stri
 	}
 
 	// Delete the vector index by source ID
-	if err := retrieveEngine.DeleteBySourceIDList(ctx, []string{sourceID}, embeddingModel.GetDimensions(), kb.Type); err != nil {
+	if err := retrieveEngine.DeleteBySourceIDList(ctx, []string{sourceID}, indexDimensions(embeddingModel), kb.Type); err != nil {
 		logger.Warnf(ctx, "Failed to delete vector index for question (may not exist): %v", err)
 		// Continue even if vector deletion fails - the question might not have been indexed
 	}

@@ -1831,7 +1831,7 @@ const ensureDocumentKbReady = () => {
   }
   // Embedding model only required when RAG indexing is enabled
   const strategy = (kbInfo.value as any).indexing_strategy
-  const needsEmbedding = !strategy || strategy.vector_enabled || strategy.keyword_enabled
+  const needsEmbedding = !strategy || strategy.vector_enabled
   if (needsEmbedding && !kbInfo.value.embedding_model_id) {
     MessagePlugin.warning(t('knowledgeBase.notInitialized'));
     return false;
