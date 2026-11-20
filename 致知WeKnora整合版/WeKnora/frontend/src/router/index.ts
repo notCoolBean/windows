@@ -100,6 +100,11 @@ const router = createRouter({
       meta: { requiresInit: true, requiresAuth: true },
       children: [
         {
+          path: 'zhizhi-writer', name: 'zhizhiWriter',
+          component: () => import('../views/ZhizhiWriter.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
           path: 'zhizhi-office', name: 'zhizhiOffice',
           component: () => import('../views/ZhizhiOffice.vue'),
           meta: { requiresAuth: true }

@@ -1,7 +1,7 @@
 import {createArticleEditor, fromGeneratedText, wordDocument} from './editor.js';
 const el = id => document.getElementById(id);
 const headers = {'Content-Type':'application/json','X-Session':document.querySelector('meta[name=session]').content};
-let selected = null, mode = 'file', loading = false, controller = null;
+let selected = null, mode = 'paste', loading = false, controller = null;
 let modelReady = false;
 const editor = createArticleEditor(el('draft'), el('formatBar'), () => {
   el('paperState').textContent = '已编辑';
@@ -114,10 +114,11 @@ el('history').onchange=async()=>{
 for(const id of ['sample','topic'])el(id).oninput=()=>{status('');update();};
 el('stop').onclick=()=>controller?.abort();
 
-el('generate').onclick=async()=>{
+async function generate(replace=false){
   if(el('generate').disabled || controller)return;
   const previous=!editor.isEmpty, previousState=el('paperState').textContent;
-  if(previous&&!confirm('重新仿写将替换当前新稿。继续吗？'))return;
+  if(previous&&!replace){el('replacePrompt').hidden=false;return;}
+  el('replacePrompt').hidden=true;
   controller=new AbortController();
   let finished=false;
   const stream=el('stream');
@@ -151,7 +152,10 @@ el('generate').onclick=async()=>{
     status(prefix+(previous?'已保留上次新稿。':stream.textContent?'已保留生成的部分。':''),!stopped);
     el('paperState').textContent=previous?previousState:(stream.textContent?'部分新稿':'等待起草');
   }finally{controller=null;editor.setEditable(true,false);stream.textContent='';update();}
-};
+}
+el('generate').onclick=()=>generate();
+el('confirmReplace').onclick=()=>generate(true);
+el('cancelReplace').onclick=()=>{el('replacePrompt').hidden=true;};
 el('copy').onclick=async()=>{
   try{
     if(navigator.clipboard?.write && window.ClipboardItem){

@@ -8,16 +8,17 @@
 <div class="modelRow"><div><strong>本地模型</strong><p id="modelState" role="status">正在读取模型状态…</p></div><button class="quiet" id="chooseModel" disabled>导入模型</button></div>
 <input id="modelFile" type="file" accept=".gguf" hidden>
 <h2>参考范文</h2>
-<div class="tabs" aria-label="范文输入方式"><button id="fileTab" aria-pressed="true">选择文件</button><button id="pasteTab" aria-pressed="false">粘贴正文</button></div>
-<div id="filePanel">
+<div class="tabs" aria-label="范文输入方式"><button id="pasteTab" aria-pressed="true">直接输入</button><button id="fileTab" aria-pressed="false">上传范文</button></div>
+<div id="filePanel" hidden>
 <button id="drop" class="drop" aria-label="选择或更换范文文件"><span class="docIcon" aria-hidden="true">≡</span><strong id="fileTitle">选择或拖入范文</strong><small id="fileMeta">DOCX、TXT、Markdown · 最大 8 MB</small></button>
 <input id="file" type="file" accept=".docx,.txt,.md" hidden>
 <label id="historyLabel" class="history" hidden>已存范文<select id="history"><option value="">选择曾用文章</option></select></label>
 <details id="preview" hidden><summary>查看范文原文</summary><pre id="sourceText"></pre></details>
 </div>
-<div id="pastePanel" hidden><label class="sr" for="sample">范文正文</label><textarea id="sample" rows="6" placeholder="将参考文章的正文粘贴到这里…" maxlength="500000"></textarea></div>
+<div id="pastePanel"><label class="sr" for="sample">范文正文</label><textarea id="sample" rows="6" placeholder="直接输入或粘贴范文正文，将参考它的语气、句式和结构生成新文章…" maxlength="500000"></textarea></div>
 <div class="topic"><label for="topic">新文章主题与要求</label><textarea id="topic" rows="5" maxlength="2000" placeholder="写什么、写给谁？也可以补充需要采用的事实或字数要求。"></textarea></div>
 <button class="primary" id="generate" disabled>开始仿写 <span aria-hidden="true">↗</span></button>
+<div id="replacePrompt" hidden role="alert"><p>重新仿写将替换当前新稿，是否继续？</p><button class="quiet" id="cancelReplace">保留新稿</button> <button class="quiet" id="confirmReplace">确认重新仿写</button></div>
 <button class="stop" id="stop" hidden>停止生成</button>
 <p class="status" id="status" role="status">选好范文并填写新主题后即可开始。</p>
 </section>

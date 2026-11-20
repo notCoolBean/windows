@@ -473,6 +473,8 @@ const isMenuItemActive = (itemPath: string): boolean => {
             return currentRoute === 'kbCreatChat' || currentRoute === 'globalCreatChat';
         case 'settings':
             return currentRoute === 'settings';
+        case 'zhizhi-writer':
+            return currentRoute === 'zhizhiWriter';
         default:
             return itemPath === currentpath.value;
     }
@@ -500,6 +502,7 @@ const TOP_MENU_PATHS = new Set(['creatChat', 'knowledge-bases', 'artifacts', 'ag
 const topMenuItems = computed<MenuItem[]>(() => {
     const items = (visibleMenuArr.value as unknown as MenuItem[]).filter((item: MenuItem) => TOP_MENU_PATHS.has(item.path));
     if ((window as any).go?.main?.App?.GetOfflineModels) {
+        items.push({ title: '文章仿写', icon: 'artifact', path: 'zhizhi-writer' });
         items.push({ title: '离线模型', icon: 'setting', path: 'offline-models' });
         items.push({ title: '致知办公', icon: 'artifact', path: 'zhizhi-office' });
     }

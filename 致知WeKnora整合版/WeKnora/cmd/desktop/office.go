@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -111,6 +112,19 @@ func withOffice(next http.Handler) http.Handler {
 		if p == nil {
 			http.Error(w, "请从致知办公页面打开此功能", 503)
 			return
+		}
+		// WebView requests may have unknown length. The Python office handlers
+		// read Content-Length and cannot decode chunked request bodies.
+		if r.Method == http.MethodPost && parts[1] == "api" {
+			body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 24<<20))
+			if err != nil {
+				http.Error(w, "无法读取提交内容或内容超过 24 MB", http.StatusRequestEntityTooLarge)
+				return
+			}
+			r.Body.Close()
+			r.Body = io.NopCloser(bytes.NewReader(body))
+			r.ContentLength = int64(len(body))
+			r.TransferEncoding = nil
 		}
 		proxy := httputil.NewSingleHostReverseProxy(p.target)
 		original := proxy.Director
