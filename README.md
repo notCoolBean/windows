@@ -2,6 +2,10 @@
 
 Windows x64 本地文章仿写应用。导入 DOCX、TXT、Markdown 范文或粘贴正文，输入新主题即可起草。右侧 Tiptap 编辑器支持修改新稿、导出 Word 和 TXT。
 
+## WeKnora 离线整合版
+
+新增 [致知知识工作台（WeKnora 整合版）](致知WeKnora整合版/README.md)：统一知识库与办公界面，支持本地文字、向量和视觉模型，提供 Windows/macOS 构建及国产 Linux 适配入口。当前源码包含新的「知」字 Logo 与快速问答默认模型绑定修复。模型权重和完整安装包不存放在 Git 仓库。
+
 ## 安装和导入模型
 
 1. 从 [GitHub Releases](https://github.com/notCoolBean/windows/releases/latest) 下载单个 `Zhizhi-Writer-Setup-x64.exe`，双击安装，从桌面或开始菜单打开「致知文章仿写」。

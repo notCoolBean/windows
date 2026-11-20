@@ -1,0 +1,881 @@
+﻿/* ============================================================
+   shell.css — 致知笔记 · 外壳与主页
+   视觉沿用「电子记事本」：深蓝渐变 + 白圆角卡片 + 宋体/小标宋
+   本文件只负责三段式外壳、顶栏导航与主页入口卡，
+   笔记 / 编辑器内部样式仍由 css/style.css 提供。
+   ============================================================ */
+
+html, body { height: 100%; }
+
+body {
+    font-family: 'SimSun', '宋体', 'Microsoft YaHei', sans-serif;
+    background: #f5f7fa;
+    color: #2c3e50;
+    overflow: hidden;
+}
+
+/* ---------------- 顶栏 ---------------- */
+#mainHeader {
+    height: 60px;
+    padding: 0 14px;
+    background: linear-gradient(135deg, #0d2b4e 0%, #1a5276 40%, #2980b9 70%, #5dade2 100%);
+    box-shadow: 0 4px 15px rgba(13, 43, 78, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 150;
+}
+
+/* 红头细线：公文气质 */
+#mainHeader::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(176, 58, 46, 0) 0%, rgba(176, 58, 46, 0.85) 22%, rgba(192, 57, 43, 0.95) 50%, rgba(176, 58, 46, 0.85) 78%, rgba(176, 58, 46, 0) 100%);
+}
+
+#headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex-shrink: 0;
+}
+
+#mainHeader h1 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'FZXiaoBiaoSong', '方正小标宋简体', 'SimHei', sans-serif;
+    font-size: 21px;
+    font-weight: normal;
+    letter-spacing: 2px;
+    color: #fff;
+    white-space: nowrap;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+#mainHeader h1 img {
+    width: 27px;
+    height: 27px;
+}
+
+/* logo = 全屏开关，标题文字 = 回主页 */
+#headerLogo {
+    cursor: pointer;
+    border-radius: 5px;
+    transition: transform .16s ease, background .16s ease;
+}
+#headerLogo:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: scale(1.06);
+}
+#headerHome {
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 1px 4px;
+    margin-left: -4px;
+    transition: background .16s ease, color .16s ease;
+}
+#headerHome:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+
+/* 顶栏导航 */
+#headerNav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+#headerTools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+/* 中间操作栏：紧跟标题左对齐，内容由 build-html.js 注入 */
+.npHeaderOps {
+    flex: 0 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-left: 18px;
+    /* 外发光要往下晕开：上下留白 + 允许溢出，避免被矩形裁剪 */
+    padding: 15px 18px 15px 0;
+    overflow: visible;
+}
+
+/* 三个功能键：与外发光渐变融合的「灯光按钮」
+   未点亮 = 灰暗低饱和（同色系但压暗），点亮 = 提亮 + 强外发光。
+   外发光用大范围多层 box-shadow，与顶栏渐变色自然过渡。 */
+.npHdrBtn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 30px;
+    padding: 0 16px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%);
+    color: rgba(226, 240, 250, 0.72);
+    font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: .6px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 1px 2px rgba(4, 20, 36, 0.3);
+    transition: background .26s ease, border-color .26s ease, color .26s ease,
+                box-shadow .34s ease, transform .14s ease;
+}
+
+/* 三组按钮：数据文件+文章列表 | 参考资料 | 多窗预览 */
+.npHdrGroup {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.npHdrSep {
+    flex: none;
+    width: 1px;
+    height: 20px;
+    margin: 0 2px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.34) 50%, rgba(255, 255, 255, 0.02) 100%);
+    box-shadow: 0 0 6px rgba(160, 210, 255, 0.18);
+}
+
+/* 未点亮：同色系但压暗、去饱和 */
+.npHdrData {
+    background: linear-gradient(180deg, rgba(30, 76, 110, 0.62) 0%, rgba(16, 52, 80, 0.62) 100%);
+    border-color: rgba(96, 156, 200, 0.3);
+}
+.npHdrArticle {
+    background: linear-gradient(180deg, rgba(24, 82, 66, 0.62) 0%, rgba(14, 58, 46, 0.62) 100%);
+    border-color: rgba(84, 156, 128, 0.3);
+}
+.npHdrRef {
+    background: linear-gradient(180deg, rgba(62, 54, 104, 0.62) 0%, rgba(42, 36, 74, 0.62) 100%);
+    border-color: rgba(132, 120, 186, 0.3);
+}
+.npHdrMv {
+    background: linear-gradient(180deg, rgba(92, 64, 30, 0.62) 0%, rgba(66, 44, 18, 0.62) 100%);
+    border-color: rgba(196, 152, 72, 0.3);
+}
+.npHdrMv:hover {
+    background: linear-gradient(180deg, rgba(140, 98, 42, 0.84) 0%, rgba(102, 68, 24, 0.84) 100%);
+    border-color: rgba(236, 196, 118, 0.62);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16),
+                0 0 12px 2px rgba(214, 160, 62, 0.26),
+                0 0 26px 6px rgba(160, 110, 30, 0.10),
+                0 2px 8px rgba(4, 20, 36, 0.3);
+}
+.npHdrMv.active {
+    background: linear-gradient(180deg, #E8BE62 0%, #B57C1B 100%);
+    border-color: #FBE8B8;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55),
+                0 0 10px 2px rgba(232, 190, 98, 0.55),
+                0 0 20px 5px rgba(200, 150, 50, 0.24),
+                0 0 34px 9px rgba(170, 120, 30, 0.10);
+}
+
+/* 悬停：微微点亮（但不是完全点亮） */
+.npHdrBtn:hover {
+    color: #f2fbff;
+    transform: translateY(-1px);
+}
+.npHdrData:hover {
+    background: linear-gradient(180deg, rgba(38, 106, 152, 0.82) 0%, rgba(20, 72, 110, 0.82) 100%);
+    border-color: rgba(140, 205, 240, 0.6);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16),
+                0 0 12px 2px rgba(64, 170, 235, 0.26),
+                0 0 26px 6px rgba(40, 130, 200, 0.10),
+                0 2px 8px rgba(4, 20, 36, 0.3);
+}
+.npHdrArticle:hover {
+    background: linear-gradient(180deg, rgba(32, 116, 94, 0.82) 0%, rgba(20, 84, 68, 0.82) 100%);
+    border-color: rgba(128, 226, 190, 0.6);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16),
+                0 0 12px 2px rgba(52, 211, 153, 0.24),
+                0 0 26px 6px rgba(16, 150, 110, 0.10),
+                0 2px 8px rgba(4, 20, 36, 0.3);
+}
+.npHdrRef:hover {
+    background: linear-gradient(180deg, rgba(88, 76, 148, 0.82) 0%, rgba(60, 52, 104, 0.82) 100%);
+    border-color: rgba(186, 172, 240, 0.6);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16),
+                0 0 12px 2px rgba(150, 130, 235, 0.26),
+                0 0 26px 6px rgba(110, 90, 200, 0.10),
+                0 2px 8px rgba(4, 20, 36, 0.3);
+}
+.npHdrBtn:active {
+    transform: translateY(0);
+}
+
+/* 点亮态：亮底 + 白字 + 大范围外发光，与顶栏背景自然晕开 */
+.npHdrBtn.active {
+    color: #ffffff;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+    transform: translateY(-1px);
+}
+.npHdrData.active {
+    background: linear-gradient(180deg, #63C7F5 0%, #2C8FCF 100%);
+    border-color: #BFE9FF;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55),
+                0 0 10px 2px rgba(90, 195, 250, 0.60),
+                0 0 20px 5px rgba(56, 158, 224, 0.26),
+                0 0 34px 9px rgba(40, 130, 200, 0.10);
+}
+.npHdrArticle.active {
+    background: linear-gradient(180deg, #5FDDAF 0%, #1E9E76 100%);
+    border-color: #C6F7E4;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55),
+                0 0 10px 2px rgba(90, 226, 176, 0.55),
+                0 0 20px 5px rgba(40, 190, 140, 0.24),
+                0 0 34px 9px rgba(16, 150, 110, 0.10);
+}
+.npHdrRef.active {
+    background: linear-gradient(180deg, #AFA0F0 0%, #6C55C9 100%);
+    border-color: #E2DBFF;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55),
+                0 0 10px 2px rgba(170, 150, 245, 0.55),
+                0 0 20px 5px rgba(130, 105, 220, 0.24),
+                0 0 34px 9px rgba(100, 80, 190, 0.10);
+}
+
+/* 版记（底部）右侧：本机服务状态 + 笔记列表收起箭头 */
+#mainFooter .npBridgePill {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 18px;
+    padding: 0 8px;
+    border: 1px solid rgba(255, 255, 255, .28);
+    border-radius: 99px;
+    background: rgba(255, 255, 255, .1);
+    color: rgba(255, 255, 255, .8);
+    font-size: 10.5px;
+    letter-spacing: 0;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: border-color .16s, background .16s, color .16s;
+}
+#mainFooter .npBridgePill:hover { border-color: rgba(255, 255, 255, .6); color: #fff; }
+#mainFooter .npBridgePill.ok { color: #9BE8C2; border-color: rgba(120, 220, 175, .45); background: rgba(47, 163, 107, .18); }
+#mainFooter .npBridgePill.ok .npBridgeDot { background: #4FD08C; box-shadow: 0 0 0 3px rgba(79, 208, 140, .18); }
+#mainFooter .npBridgePill.old,
+#mainFooter .npBridgePill.part { color: #F0D08A; border-color: rgba(220, 180, 90, .45); background: rgba(200, 150, 50, .16); }
+#mainFooter .npBridgePill.old .npBridgeDot,
+#mainFooter .npBridgePill.part .npBridgeDot { background: #DDA83C; }
+#mainFooter .npBridgePill.off { color: #F0A9A2; border-color: rgba(200, 105, 95, .45); background: rgba(190, 90, 80, .16); }
+#mainFooter .npBridgePill.off .npBridgeDot { background: #D8736A; }
+#mainFooter .npBridgePill.checking .npBridgeDot { animation: npBridgePulse 1.4s infinite; }
+#mainFooter .npBridgeRetry {
+    flex: none;
+    height: 18px;
+    padding: 0 8px;
+    border: 1px solid rgba(255, 255, 255, .28);
+    border-radius: 99px;
+    background: rgba(255, 255, 255, .1);
+    color: rgba(255, 255, 255, .8);
+    font-size: 10.5px;
+    cursor: pointer;
+}
+#mainFooter .npBridgeRetry:hover { border-color: rgba(255, 255, 255, .6); color: #fff; }
+#mainFooter .npBridgeRetry.hidden { display: none; }
+#mainFooter .paFooterRight { gap: 8px; }
+
+/* 检索按钮：独立的玫瑰紫渐变（与检索框同一色系） */
+.npHdrIcon {
+    width: 34px;
+    height: 30px;
+    padding: 0;
+    border-radius: 9px;
+    background: linear-gradient(180deg, rgba(120, 78, 132, 0.66) 0%, rgba(78, 46, 96, 0.66) 100%);
+    border-color: rgba(198, 152, 210, 0.32);
+    color: rgba(246, 226, 255, 0.82);
+    font-size: 13px;
+}
+.npHdrIcon:hover {
+    background: linear-gradient(180deg, rgba(168, 104, 190, 0.86) 0%, rgba(110, 62, 140, 0.86) 100%);
+    border-color: rgba(226, 186, 240, 0.7);
+    color: #ffffff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                0 0 12px 2px rgba(200, 120, 235, 0.30),
+                0 0 26px 6px rgba(150, 80, 190, 0.12);
+}
+.npHdrIcon.active {
+    background: linear-gradient(180deg, #E2A8F5 0%, #A855C8 100%);
+    border-color: #F4DEFF;
+    color: #FFFFFF;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55),
+                0 0 16px 3px rgba(220, 140, 250, 0.55),
+                0 0 46px 14px rgba(170, 90, 210, 0.32);
+}
+.npHdrIcon img {
+    width: 15px;
+    height: 15px;
+}
+
+.npHdrWrap {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.npHdrHint {
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.26);
+    color: #eaf4ff;
+    font-family: 'Microsoft YaHei', sans-serif;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+/* ---------------- 顶栏原地展开的检索栏 ---------------- */
+.npHdrSearchHost {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: none;
+    align-items: center;
+}
+#npHeaderOps.npSearching > *:not(.npHdrSearchHost) {
+    display: none;
+}
+#npHeaderOps.npSearching .npHdrSearchHost {
+    display: flex;
+}
+
+/* 把原浮动检索弹窗改成顶栏里的一行 */
+#npHeaderOps .notepadSearchWrap.npHdrDock {
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    padding: 0 6px 0 10px;
+    height: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.36);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.16);
+    box-shadow: none;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+#npHeaderOps .npHdrDock .notepadSearchHead {
+    padding: 0;
+    border: none;
+    background: transparent;
+    flex: 0 0 auto;
+    order: 3;
+}
+#npHeaderOps .npHdrDock .notepadSearchHeadText {
+    display: none;
+}
+#npHeaderOps .npHdrDock .notepadSearchClose {
+    position: static;
+    transform: none;
+    width: 20px;
+    height: 20px;
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.78);
+}
+#npHeaderOps .npHdrDock .notepadSearchClose:hover {
+    color: #ffffff;
+}
+#npHeaderOps .npHdrDock .notepadSearchBody {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0;
+    gap: 6px;
+    order: 1;
+}
+#npHeaderOps .npHdrDock .notepadSearchInput {
+    flex: 1 1 auto;
+    width: auto !important;
+    min-width: 0;
+    height: 24px;
+    border-color: rgba(255, 255, 255, 0.45);
+    background: #ffffff;
+    color: #14456e;
+}
+#npHeaderOps .npHdrDock .notepadSearchInput:focus {
+    border-color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.28);
+}
+#npHeaderOps .npHdrDock .notepadSearchCount {
+    margin-left: 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-family: 'Microsoft YaHei', sans-serif;
+}
+#npHeaderOps .npHdrDock .notepadSearchNav {
+    flex-direction: row;
+    gap: 2px;
+    margin-left: 0;
+    order: 2;
+}
+#npHeaderOps .npHdrDock .notepadSearchNav button {
+    width: 18px;
+    height: 20px;
+    border-color: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.9);
+    color: #14456e;
+    border-radius: 4px;
+}
+#npHeaderOps .npHdrDock .notepadSearchNav button:first-child,
+#npHeaderOps .npHdrDock .notepadSearchNav button:last-child {
+    border-radius: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.45);
+}
+#npHeaderOps .npHdrDock .notepadSearchNav button:hover {
+    background: #ffffff;
+    color: #0d2b4e;
+}
+#npHeaderOps .npHdrDock .notepadSearchFilter {
+    margin-left: 0;
+    color: rgba(255, 255, 255, 0.9);
+    order: 2;
+}
+
+.navBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 29px;
+    padding: 0 13px;
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #eaf4ff;
+    font-family: 'SimHei', '黑体', sans-serif;
+    font-size: 12.5px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+.navBtn.navIconBtn {
+    padding: 0 9px;
+}
+
+.navBtn:hover {
+    background: rgba(255, 255, 255, 0.24);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.navBtn.active {
+    background: #ffffff;
+    border-color: #ffffff;
+    color: #14456e;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
+}
+
+.navBtn img {
+    width: 15px;
+    height: 15px;
+    opacity: .95;
+}
+
+/* ---------------- 主体 ---------------- */
+#mainContent {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+/* #rightPanel / #trackContent / #notepadDockLayer 由 css/style.css 定义，
+   此处只补主页需要的容器高度 */
+#rightPanel { min-height: 0; }
+
+#trackContent {
+    padding: 0;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------------- 主页 ---------------- */
+.homeWrap {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 34px 40px 30px;
+    background:
+        radial-gradient(circle at 88% 6%, rgba(41, 128, 185, 0.10), transparent 46%),
+        radial-gradient(circle at 4% 96%, rgba(176, 58, 46, 0.07), transparent 44%),
+        #f5f7fa;
+}
+
+.homeHead {
+    flex-shrink: 0;
+    margin-bottom: 26px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #dbe3ec;
+    position: relative;
+}
+
+.homeHead::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 84px;
+    height: 2px;
+    background: #b03a2e;
+}
+
+.homeTitle {
+    font-family: 'FZXiaoBiaoSong', '方正小标宋简体', 'SimSun', serif;
+    font-size: 27px;
+    font-weight: normal;
+    letter-spacing: 4px;
+    color: #123b5e;
+    line-height: 1.4;
+}
+
+.homeSub {
+    margin-top: 8px;
+    font-family: 'KaiTi_GB2312', 'KaiTi', '楷体', serif;
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: #6b8099;
+}
+
+.homeCards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 22px;
+    align-content: start;
+}
+
+.homeCard {
+    position: relative;
+    display: flex;
+    gap: 18px;
+    padding: 24px 24px 22px;
+    background: #ffffff;
+    border: 1px solid #e6ecf4;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.18);
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.homeCard::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #1a5276, #5dade2);
+    opacity: .9;
+}
+
+.homeCard:hover {
+    transform: translateY(-3px);
+    border-color: #cddff2;
+    box-shadow: 0 12px 28px rgba(26, 82, 118, 0.22);
+}
+
+.homeCard.accent::before {
+    background: linear-gradient(180deg, #b03a2e, #d98880);
+}
+
+.homeCardIcon {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #eaf2fb, #d6e6f7);
+    box-shadow: inset 0 0 0 1px rgba(26, 82, 118, 0.08);
+}
+
+.homeCard.accent .homeCardIcon {
+    background: linear-gradient(135deg, #fbeceb, #f6d9d6);
+}
+
+.homeCardIcon img {
+    width: 28px;
+    height: 28px;
+}
+
+.homeCardBody {
+    min-width: 0;
+    flex: 1;
+}
+
+.homeCardName {
+    font-family: 'FZXiaoBiaoSong', '方正小标宋简体', 'SimHei', sans-serif;
+    font-size: 21px;
+    font-weight: normal;
+    letter-spacing: 3px;
+    color: #123b5e;
+    line-height: 1.3;
+}
+
+.homeCard.accent .homeCardName { color: #8f2f26; }
+
+.homeCardDesc {
+    margin-top: 9px;
+    font-family: 'KaiTi_GB2312', 'KaiTi', '楷体', serif;
+    font-size: 14px;
+    line-height: 1.85;
+    color: #5d7186;
+}
+
+.homeCardTags {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.homeCardTag {
+    padding: 2px 9px;
+    font-family: 'SimHei', '黑体', sans-serif;
+    font-size: 11px;
+    letter-spacing: .5px;
+    color: #3d6a92;
+    background: #eef4fb;
+    border: 1px solid #dbe8f5;
+    border-radius: 3px;
+}
+
+.homeCard.accent .homeCardTag {
+    color: #9a4a41;
+    background: #fbf0ef;
+    border-color: #f2dcd9;
+}
+
+.homeCardGo {
+    align-self: flex-end;
+    flex-shrink: 0;
+    font-family: 'SimHei', '黑体', sans-serif;
+    font-size: 12px;
+    color: #2980b9;
+    white-space: nowrap;
+    opacity: .75;
+    transition: opacity .2s ease, transform .2s ease;
+}
+
+.homeCard:hover .homeCardGo {
+    opacity: 1;
+    transform: translateX(3px);
+}
+
+.homeCard.accent .homeCardGo { color: #b03a2e; }
+
+.homeFoot {
+    margin-top: auto;
+    padding-top: 26px;
+    font-size: 11px;
+    color: #97a8ba;
+    letter-spacing: .5px;
+    text-align: center;
+}
+
+/* ---------------- 底栏 ---------------- */
+#mainFooter {
+    height: 26px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.72);
+    position: relative;
+    z-index: 40;
+}
+
+/* ---------------- 小屏适配 ---------------- */
+@media (max-width: 900px) {
+    .homeWrap { padding: 22px 18px; }
+    .homeTitle { font-size: 22px; letter-spacing: 2px; }
+    .navBtn { padding: 0 9px; font-size: 12px; }
+    .npHeaderOps { justify-content: flex-start; }
+}
+
+/* ---------------- 检索框（顶栏内联，玫瑰紫同色系） ---------------- */
+#notepadSearchWrap {
+    position: fixed;
+    z-index: 260;
+    display: none;
+    align-items: center;
+    height: 36px;
+    padding: 4px 8px 4px 14px;
+    background: linear-gradient(180deg, #FBF3FE 0%, #F0E2F7 100%);
+    border: 1px solid #D9BEE8;
+    border-radius: 9px;
+    box-shadow: 0 6px 20px rgba(96, 48, 120, 0.28),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    box-sizing: border-box;
+    cursor: grab;
+    user-select: none;
+}
+#notepadSearchWrap.npDragging { cursor: grabbing; }
+/* 左侧拖动握把 */
+#notepadSearchWrap .notepadSearchGrip {
+    flex: 0 0 auto;
+    width: 6px;
+    height: 18px;
+    margin-right: 7px;
+    border-radius: 3px;
+    background-image: radial-gradient(circle, #B98FD0 1px, transparent 1.2px);
+    background-size: 3px 3px;
+    opacity: .8;
+    cursor: grab;
+}
+#notepadSearchWrap .notepadSearchBody {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    width: 100%;
+    box-sizing: border-box;
+    cursor: default;
+}
+#notepadSearchWrap .notepadSearchFilter,
+#notepadSearchWrap .notepadSearchNav,
+#notepadSearchWrap .notepadSearchClose { cursor: auto; }
+#notepadSearchWrap .notepadSearchInput {
+    height: 26px;
+    padding: 0 9px;
+    cursor: text;
+    border: 1px solid #CBAEDC;
+    border-radius: 6px;
+    background: #FFFFFF;
+    color: #3B2447;
+    font-size: 12px;
+    outline: none;
+    flex: 1 1 auto;
+    min-width: 0;
+    box-sizing: border-box;
+}
+#notepadSearchWrap .notepadSearchInput:focus {
+    border-color: #A855C8;
+    box-shadow: 0 0 0 2px rgba(168, 85, 200, 0.16);
+}
+#notepadSearchWrap .notepadSearchCount {
+    font-size: 11px;
+    color: #6B3D80;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+#notepadSearchWrap .notepadSearchNav {
+    display: none;
+    flex-direction: row;
+    gap: 2px;
+    flex-shrink: 0;
+}
+#notepadSearchWrap .notepadSearchNav.show { display: flex; }
+#notepadSearchWrap .notepadSearchNav button {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 1px solid #CBAEDC;
+    border-radius: 5px;
+    background: #FFFFFF;
+    color: #6B3D80;
+    font-size: 8px;
+    line-height: 1;
+    cursor: pointer;
+}
+#notepadSearchWrap .notepadSearchNav button:hover {
+    background: #EFDEF7;
+    border-color: #A855C8;
+    color: #5B2A6E;
+}
+#notepadSearchWrap .notepadSearchFilter {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11.5px;
+    color: #5B2A6E;
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+#notepadSearchWrap .notepadSearchFilter input {
+    margin: 0;
+    accent-color: #A855C8;
+}
+/* 关闭按钮：放在「仅匹配」后面，圆形胶囊 */
+#notepadSearchWrap .notepadSearchClose {
+    position: static;
+    transform: none;
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    margin-left: 2px;
+    padding: 0;
+    border: 1px solid #CBAEDC;
+    border-radius: 50%;
+    background: #FFFFFF;
+    color: #7A4A8C;
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, color .15s, border-color .15s;
+}
+#notepadSearchWrap .notepadSearchClose:hover {
+    background: #A855C8;
+    border-color: #A855C8;
+    color: #FFFFFF;
+}
+
+/* 覆盖 css/style.css 里残留的旧检索框规则（padding / width / white-space 会撑破外壳） */
+body #notepadSearchWrap {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    white-space: normal;
+    overflow: visible;
+}
+body #notepadSearchWrap .notepadSearchBody {
+    padding: 0;
+    gap: 6px;
+    height: 100%;
+    align-items: center;
+    white-space: normal;
+}
+body #notepadSearchWrap .notepadSearchInput {
+    height: 26px;
+    line-height: 26px;
+    margin: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+body #notepadSearchWrap .notepadSearchFilter {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+    flex: 0 0 auto;
+}

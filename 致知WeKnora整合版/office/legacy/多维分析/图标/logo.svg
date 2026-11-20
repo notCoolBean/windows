@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="134 126.5 248 248" width="248" height="248">
+  <defs>
+    <radialGradient id="ballG" cx="0.34" cy="0.27" r="0.82">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.10" stop-color="#f6fdff"/>
+      <stop offset="0.24" stop-color="#e2f2fa"/>
+      <stop offset="0.42" stop-color="#c6e0ee"/>
+      <stop offset="0.60" stop-color="#a6c8db"/>
+      <stop offset="0.78" stop-color="#85adc2"/>
+      <stop offset="0.92" stop-color="#6c93a9"/>
+      <stop offset="1" stop-color="#587f95"/>
+    </radialGradient>
+    <radialGradient id="ballSpec" cx="0.30" cy="0.24" r="0.30">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.92"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ballBounce" cx="0.68" cy="0.76" r="0.34">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rodG" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#eaf7fd"/>
+      <stop offset="0.45" stop-color="#cbe2ef"/>
+      <stop offset="1" stop-color="#8fb2c6"/>
+    </linearGradient>
+    <radialGradient id="coreGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/>
+      <stop offset="0.62" stop-color="#dff4fd" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#dff4fd" stop-opacity="0"/>
+    </radialGradient>
+    <g id="ball">
+      <circle r="1" fill="url(#ballG)"/>
+      <circle r="1" fill="url(#ballBounce)"/>
+      <circle r="1" fill="url(#ballSpec)"/>
+      <circle r="0.965" fill="none" stroke="#ffffff" stroke-opacity="0.34" stroke-width="0.05"/>
+      <circle r="1" fill="none" stroke="#4d7186" stroke-opacity="0.30" stroke-width="0.06"/>
+    </g>
+    <style>
+      .mol { transform-origin: 252.1px 243.1px; animation: molspin 72s linear infinite; }
+      .glow { transform-origin: 252.1px 243.1px; animation: molglow 9s ease-in-out infinite; }
+      @keyframes molspin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      @keyframes molglow { 0%,100% { opacity: 0.55; } 50% { opacity: 0.95; } }
+    </style>
+  </defs>
+
+  <g class="mol">
+    <circle class="glow" cx="258" cy="250.5" r="120" fill="url(#coreGlow)"/>
+    <g stroke="url(#rodG)" stroke-width="9.5" stroke-linecap="round">
+      <line x1="252.1" y1="243.1" x2="195.3" y2="183.2"/>
+      <line x1="252.1" y1="243.1" x2="317.8" y2="188.3"/>
+      <line x1="252.1" y1="243.1" x2="176.3" y2="285.3"/>
+      <line x1="252.1" y1="243.1" x2="339.7" y2="276.8"/>
+      <line x1="252.1" y1="243.1" x2="269.2" y2="317.7"/>
+    </g>
+    <g>
+      <use href="#ball" transform="translate(195.3 183.2) scale(22.00)"/>
+      <use href="#ball" transform="translate(317.8 188.3) scale(22.00)"/>
+      <use href="#ball" transform="translate(252.1 243.1) scale(39.00)"/>
+      <use href="#ball" transform="translate(176.3 285.3) scale(30.00)"/>
+      <use href="#ball" transform="translate(339.7 276.8) scale(30.00)"/>
+      <use href="#ball" transform="translate(269.2 317.7) scale(22.00)"/>
+    </g>
+  </g>
+</svg>

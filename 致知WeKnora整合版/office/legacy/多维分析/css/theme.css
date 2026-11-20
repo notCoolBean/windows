@@ -1,0 +1,810 @@
+﻿/* ============================================================
+   多维分析 — 深色科技主题（theme.css）
+   在 shell.css（26 外壳样式）/ app.css（记录模块基础样式）之后加载，
+   把操作区、主体面板、弹窗与记录模块整体覆盖为深色科技风：
+   发光边线 / 玻璃拟态 / 渐变。仅改变观感，不改变功能与操作布局。
+   ============================================================ */
+
+/* ---------- 0. 设计令牌 ---------- */
+:root {
+  --da-bg:        #050a16;
+  --da-surface:   #0a1526;
+  --da-surface2:  #0e1c31;
+  --da-glass:     rgba(12, 24, 44, 0.66);
+  --da-glass2:    rgba(16, 30, 54, 0.78);
+  --da-line:      rgba(90, 170, 255, 0.22);
+  --da-line-2:    rgba(90, 170, 255, 0.42);
+  --da-text:      #cfe4ff;
+  --da-muted:     #8fbce8;
+  --da-dim:       #5f83ab;
+  --da-accent:    #4aa8ff;
+  --da-accent2:   #00e5ff;
+  --da-glow:      0 0 12px rgba(74, 168, 255, 0.45);
+  --da-glow-soft: 0 0 18px rgba(74, 168, 255, 0.18);
+  --da-head:      linear-gradient(90deg, #0a2a4d 0%, #124b86 55%, #0e3a68 100%);
+  --da-head-2:    linear-gradient(90deg, #08223d 0%, #0f3f70 100%);
+}
+
+/* ---------- 1. 基础与外壳布局 ---------- */
+html, body { height: 100%; }
+body {
+  color: var(--da-text) !important;
+  background: transparent !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  overflow: hidden !important;
+  padding: 0 22px !important;
+  font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Noto Sans CJK SC", -apple-system, sans-serif;
+}
+
+/* 标题栏位于画布之上 */
+.app-header { position: relative; z-index: 2; }
+
+/* 外壳中 header / footer 原按 25% 固定高（为宫格区让位），此处改为随内容自适应 */
+/* 顶部 / 中部 / 底部连成一体：顶部上圆角下直角、中部四直角、底部上直角下圆角，中间无间隔 */
+.app-header {
+  flex: 0 0 auto !important;
+  height: auto !important;
+  width: 100% !important;
+}
+.app-footer {
+  flex: 0 0 auto !important;
+  height: auto !important;
+  width: 100% !important;
+  padding: 0 0 14px !important;
+}
+
+/* 主体区域（替代 26 的宫格区） */
+.app-main {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* ---------- 2. 顶部操作区（要事记录 / 进程总览 / 数据管理 + 三级区） ---------- */
+.app-main .op-bar {
+  flex: 0 0 auto !important;
+  flex-shrink: 0;
+  height: auto !important;
+  min-height: 44px;
+  margin: 0 0 10px !important;
+  padding: 6px 14px !important;
+  gap: 10px;
+  background: var(--da-glass) !important;
+  border: 1px solid var(--da-line) !important;
+  border-radius: 12px;
+  box-shadow: var(--da-glow-soft), inset 0 1px 0 rgba(160, 210, 255, 0.08);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.app-main .op-bar .nav-sep { background: rgba(90, 170, 255, 0.45) !important; height: 22px; }
+.app-main .op-bar .menu-arrow { color: var(--da-accent) !important; text-shadow: var(--da-glow); }
+
+/* 一级按钮组容器（#opRecord）：去掉原白底边框 */
+.app-main .op-bar .op-group,
+#opRecord {
+  background: rgba(8, 18, 34, 0.55) !important;
+  border: 1px solid var(--da-line-2) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  align-self: center !important;
+  margin: 0 !important;
+  padding: 3px 6px !important;
+  height: auto !important;
+}
+
+/* 一级（二级）按钮：#opRecord .btn */
+#opRecord .btn,
+.app-main .op-bar .btn {
+  background: rgba(24, 48, 82, 0.85) !important;
+  border: 1px solid var(--da-line-2) !important;
+  color: var(--da-text) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  letter-spacing: 1px;
+  transition: all .18s ease;
+}
+#opRecord .btn:hover,
+.app-main .op-bar .btn:hover {
+  background: rgba(38, 84, 140, 0.95) !important;
+  border-color: var(--da-accent) !important;
+  color: #fff !important;
+  box-shadow: var(--da-glow) !important;
+}
+#opRecord .btn.active,
+.app-main .op-bar .btn.active {
+  background: linear-gradient(160deg, #11518f 0%, #0a7ec9 100%) !important;
+  border-color: var(--da-accent2) !important;
+  color: #fff !important;
+  box-shadow: 0 0 14px 2px rgba(0, 229, 255, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.15) !important;
+}
+
+/* 三级按钮（下划线式） */
+.op-btn3 {
+  color: var(--da-muted) !important;
+  text-decoration-color: rgba(90, 170, 255, 0.45);
+}
+.op-btn3:hover { color: var(--da-accent2) !important; text-shadow: var(--da-glow); }
+.op-btn3.situ-on { color: var(--da-accent2) !important; text-shadow: var(--da-glow); }
+.op-tier3-hint { color: var(--da-dim) !important; }
+.rec-proj-add { color: var(--da-accent) !important; text-decoration-color: rgba(74, 168, 255, 0.5); }
+.rec-proj-add:hover { color: var(--da-accent2) !important; text-shadow: var(--da-glow); }
+.op-tier3-sep { background: var(--da-line-2) !important; }
+.op-btn3-label { color: var(--da-muted) !important; }
+#recTier3 .rec-project-item { color: var(--da-muted) !important; }
+#recTier3 .rec-project-item.active { color: #fff !important; }
+
+/* 检索框 / 计数 */
+.rec-search-box {
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--da-line-2);
+  border-radius: 6px;
+  background: rgba(8, 18, 34, 0.85);
+  color: var(--da-text);
+  font-size: 12px;
+  outline: none;
+}
+.rec-search-box:focus { border-color: var(--da-accent); box-shadow: var(--da-glow); }
+.rec-search-count { color: var(--da-dim); font-size: 12px; }
+
+/* 项目滚动小按钮 */
+.rec-proj-scroll-btn {
+  border: 1px solid var(--da-line-2) !important;
+  background: rgba(20, 42, 74, 0.9) !important;
+  color: var(--da-accent) !important;
+}
+.rec-proj-scroll-btn:hover { background: rgba(38, 84, 140, 0.95) !important; color: #fff !important; }
+
+/* ---------- 3. 主体容器与面板 ---------- */
+.middle-area {
+  background: var(--da-glass) !important;
+  border: 1px solid var(--da-line) !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  box-shadow: inset 0 1px 0 rgba(160, 210, 255, 0.06);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.main-content { color: var(--da-text); }
+
+/* ---------- 4. 记录模块：要事记录（左编辑区 + 右时间轴） ---------- */
+.rec-proj-left { border-right: 1px solid var(--da-line) !important; }
+.rec-proj-right { background: var(--da-surface) !important; }
+.rec-proj-head,
+.situ-left-head,
+.situ-right-head,
+.situ-tl-head {
+  background: var(--da-head) !important;
+  border-bottom: 1px solid rgba(90, 170, 255, 0.35);
+}
+.rec-proj-foot { background: #0a2340 !important; }
+.rec-notepad {
+  background: var(--da-surface2) !important;
+  color: var(--da-text) !important;
+  border: none !important;
+}
+.rec-notepad:focus { outline: none; }
+.rec-notepad[contenteditable="true"]:empty:before { color: var(--da-dim) !important; }
+
+/* 记录面板内的通用按钮（自动识别 / 重命名 / 删除 等） */
+#tab-record .btn,
+.rec-panel .btn {
+  background: rgba(24, 48, 82, 0.9) !important;
+  border: 1px solid var(--da-line-2) !important;
+  color: var(--da-text) !important;
+  box-shadow: none !important;
+}
+#tab-record .btn:hover,
+.rec-panel .btn:hover {
+  background: rgba(38, 84, 140, 0.95) !important;
+  border-color: var(--da-accent) !important;
+  color: #fff !important;
+  box-shadow: var(--da-glow) !important;
+}
+#tab-record .btn-primary,
+.rec-panel .btn-primary {
+  background: linear-gradient(160deg, #11518f 0%, #0a7ec9 100%) !important;
+  border-color: var(--da-accent2) !important;
+  color: #fff !important;
+}
+#tab-record .btn-primary:hover { box-shadow: var(--da-glow) !important; }
+#tab-record .btn-danger,
+.rec-panel .btn-danger,
+.rec-project-modal-foot .btn-confirm-red {
+  background: linear-gradient(160deg, #8f2020 0%, #c0392b 100%) !important;
+  border-color: rgba(255, 120, 120, 0.6) !important;
+  color: #fff !important;
+}
+.rec-project-modal-foot .btn-confirm-red:hover { box-shadow: var(--da-glow) !important; }
+.rec-project-modal-foot .btn-dark-delete { background: #4b5563 !important; border-color: #6b7280 !important; color: #fff !important; }
+.rec-project-modal-foot .btn-dark-delete:hover { background: #374151 !important; }
+.modal-body .btn-outline { background: rgba(24, 48, 82, 0.9) !important; border: 1px solid var(--da-line-2) !important; color: var(--da-text) !important; }
+.modal-body .btn-outline:hover { border-color: var(--da-accent) !important; color: #fff !important; }
+
+/* 记录面板内的小操作按钮（自动识别 等）：高度压到「刚好一行」 */
+#tab-record .btn-sm,
+.rec-panel .btn-sm {
+  height: auto !important;
+  padding: 0 8px !important;
+  line-height: 17px !important;
+  font-size: 11px !important;
+  border-radius: 5px !important;
+}
+
+/* 编辑区缩放 / 项目滚动小按钮 */
+.rec-zoom-btn { border-color: rgba(191, 224, 255, 0.65) !important; color: #fff !important; }
+.rec-zoom-btn:hover { background: rgba(255, 255, 255, 0.22) !important; }
+.rec-zoom-val { color: #fff !important; }
+.rec-proj-scroll-btn { border-color: var(--da-line-2) !important; background: rgba(20, 42, 74, 0.9) !important; color: var(--da-accent) !important; }
+.rec-proj-scroll-btn:hover { background: rgba(38, 84, 140, 0.95) !important; color: #fff !important; }
+
+.rec-divider { background: rgba(90, 170, 255, 0.28) !important; }
+.rec-divider:hover, .rec-divider.dragging { background: var(--da-accent2) !important; box-shadow: var(--da-glow); }
+
+.rec-tl-container { background: var(--da-surface) !important; }
+.rec-tl-sheet { color: var(--da-text) !important; }
+.rec-tl-group::before { background: var(--da-accent) !important; border-color: var(--da-surface) !important; box-shadow: 0 0 0 2px var(--da-accent) !important; }
+.rec-tl-group::after { background: rgba(90, 170, 255, 0.5) !important; }
+.rec-tl-date { color: var(--da-accent2) !important; border-bottom-color: rgba(90, 170, 255, 0.3) !important; }
+.rec-tl-title { color: #a9d3ff !important; border-bottom-color: rgba(90, 170, 255, 0.25) !important; }
+.rec-tl-stdtime { color: var(--da-muted) !important; }
+.rec-tl-line { color: var(--da-text) !important; border-bottom-color: rgba(90, 170, 255, 0.16) !important; }
+.rec-tl-note { color: #9fbde0 !important; border-bottom-color: rgba(90, 170, 255, 0.16) !important; }
+.rec-tl-last { border-bottom-color: var(--da-line-2) !important; }
+.rec-tl-empty { color: var(--da-dim) !important; }
+.rec-tl-item.active { background: rgba(74, 168, 255, 0.16) !important; outline-color: var(--da-accent) !important; }
+.rec-tl-link { color: #0D47A1 !important; }
+.rec-tl-link:hover { color: #08306b !important; }
+.rec-tl-link.flash { background: rgba(0, 229, 255, 0.35) !important; box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.5) !important; }
+.rec-zoom-btn { border-color: rgba(191, 224, 255, 0.6) !important; }
+.rec-zoom-btn:hover { background: rgba(255, 255, 255, 0.2) !important; }
+
+/* 记录模块内表格（事件表） */
+.rec-table-toolbar { background: rgba(10, 24, 44, 0.7) !important; border-bottom: 1px solid var(--da-line) !important; }
+.rec-table-wrap { background: var(--da-surface) !important; }
+.rec-table th { background: var(--da-head-2) !important; color: #fff !important; border-color: rgba(90, 170, 255, 0.3) !important; }
+.rec-table td { border-color: rgba(90, 170, 255, 0.18) !important; color: var(--da-text) !important; }
+
+/* 类别 / 事件选择行 */
+.rec-cat-row, .rec-sel-item {
+  background: rgba(16, 30, 54, 0.6) !important;
+  border-color: var(--da-line) !important;
+}
+.rec-cat-name { background: rgba(8, 18, 34, 0.85) !important; border-color: var(--da-line-2) !important; color: var(--da-text) !important; }
+.rec-cat-name:focus { border-color: var(--da-accent) !important; }
+.rec-sel-name { color: var(--da-text) !important; }
+.rec-sel-order button { background: rgba(20, 42, 74, 0.9) !important; border-color: var(--da-line-2) !important; color: var(--da-muted) !important; }
+.rec-sel-order button:hover { background: rgba(38, 84, 140, 0.95) !important; color: #fff !important; }
+
+/* ---------- 5. 记录模块：进程总览（多维态势图） ---------- */
+.situ-left { background: rgba(10, 22, 40, 0.72) !important; border-right: 1px solid var(--da-line) !important; }
+.situ-right { background: var(--da-surface) !important; }
+.situ-left-body { background: transparent !important; }
+.situ-sel-btn, .situ-size-btn { border-color: rgba(191, 224, 255, 0.6) !important; color: #fff !important; }
+.situ-sel-btn:hover, .situ-size-btn:hover { background: rgba(255, 255, 255, 0.2) !important; }
+.situ-sel-menu { background: var(--da-surface2) !important; border-color: var(--da-line-2) !important; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6); }
+.situ-sel-menu-item { color: var(--da-text) !important; }
+.situ-sel-menu-item:hover { background: rgba(74, 168, 255, 0.22) !important; color: #fff !important; }
+.situ-proj-item:hover { background: rgba(74, 168, 255, 0.14) !important; }
+.situ-proj-name { color: var(--da-text) !important; }
+.situ-proj-empty { color: var(--da-dim) !important; }
+.situ-detail { color: var(--da-muted) !important; }
+.situ-zoom-val { color: #fff !important; }
+.situ-tl-sort-btn { border-color: rgba(191, 224, 255, 0.6) !important; color: #fff !important; }
+.situ-tl-sort-btn:hover { background: rgba(255, 255, 255, 0.2) !important; }
+.situ-tl-sort-btn.active { background: #fff !important; color: #0a2a4d !important; }
+.situ-chart { background: var(--da-surface) !important; }
+.situ-chart-empty, .situ-tl-empty { color: var(--da-dim) !important; }
+.situ-timeline { background: var(--da-surface) !important; }
+.situ-tl-sheet::before { background: rgba(90, 170, 255, 0.5) !important; }
+.situ-tl-m-head { border-top-color: rgba(90, 170, 255, 0.2) !important; }
+.situ-tl-m-head .situ-tl-m-dot { background: var(--da-accent) !important; }
+.situ-tl-m-head .situ-tl-m-dot::after { border-color: var(--da-accent) !important; }
+.situ-tl-m-head .situ-tl-m-label { color: var(--da-accent2) !important; }
+.situ-tl-m-item .situ-tl-item-dot { background: var(--da-accent) !important; border-color: var(--da-accent) !important; box-shadow: 0 0 0 3px var(--da-surface), 0 0 0 5px var(--da-accent) !important; }
+.situ-tl-m-item .situ-tl-item-date { color: #a9d3ff !important; }
+.situ-tl-m-item .situ-tl-item-date .situ-tl-item-project { color: var(--da-muted) !important; }
+.situ-tl-m-item .situ-tl-item-content { color: var(--da-text) !important; }
+.situ-tl-m-item .situ-tl-item-note { color: #c8d4e2 !important; }
+.situ-tl-m-item:hover::after, .situ-tl-m-item.tl-active::after { background: rgba(74, 168, 255, 0.14) !important; }
+.situ-tl-m-item.tl-active::after { box-shadow: 0 0 0 1px var(--da-line-2) inset !important; }
+.situ-tl-divider-inner { border-bottom-color: rgba(90, 170, 255, 0.25) !important; }
+.situ-tl-divider-month { border-bottom-color: var(--da-line-2) !important; }
+
+/* 态势图时间轴（横向） */
+.situ-axis { background: rgba(12, 26, 46, 0.9) !important; }
+.situ-axis-freeze { background: var(--da-head) !important; border-bottom-color: var(--da-line-2) !important; }
+.situ-axis-col { color: var(--da-muted) !important; border-left-color: rgba(90, 170, 255, 0.12) !important; }
+.situ-axis-col.hl { color: #fff !important; }
+.situ-axis-col.month-mark { color: var(--da-accent2) !important; }
+.situ-ellipsis, .situ-ellipsis-month { color: var(--da-dim) !important; }
+.situ-track { border-bottom-color: rgba(90, 170, 255, 0.12) !important; }
+.situ-track-line { background: rgba(90, 170, 255, 0.35) !important; }
+.situ-track-label { color: #f2f8ff !important; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); }
+.situ-event { color: #f2f8ff !important; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.45); }
+.situ-event:hover { filter: brightness(1.18); }
+.situ-event-content { color: #e6f0ff !important; }
+.situ-event.situ-event-selected { outline-color: rgba(120, 200, 255, 0.9) !important; box-shadow: 0 0 0 3px rgba(74, 168, 255, 0.35), 0 1px 6px rgba(0, 0, 0, 0.45); }
+.situ-event-tip { background: rgba(9, 26, 48, 0.98) !important; border: 1px solid var(--da-line-2); }
+.situ-vline { background: rgba(90, 170, 255, 0.5); }
+.situ-proj-dot { border-color: rgba(255, 255, 255, 0.25) !important; box-shadow: 0 0 8px rgba(0, 0, 0, 0.5); }
+.situ-proj-item.on .situ-proj-dot { box-shadow: 0 0 8px 1px rgba(74, 168, 255, 0.55) !important; }
+
+/* ---------- 6. 弹窗（记录模块的类别/项目/导出/选择等） ---------- */
+.modal-mask { background: rgba(3, 8, 18, 0.72) !important; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.modal-box {
+  background: linear-gradient(180deg, #0d1d33 0%, #0a1526 100%) !important;
+  border: 1px solid var(--da-line-2);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.7), var(--da-glow-soft);
+  color: var(--da-text);
+}
+.modal-head { background: var(--da-head-2) !important; border-bottom: 1px solid var(--da-line) !important; }
+.modal-head .m-title { color: #fff !important; }
+.modal-body { color: var(--da-text); }
+.modal-foot { border-top: 1px solid var(--da-line) !important; background: rgba(8, 18, 34, 0.5); }
+.modal-box .btn { background: rgba(24, 48, 82, 0.9); border: 1px solid var(--da-line-2); color: var(--da-text); }
+.modal-box .btn:hover { background: rgba(38, 84, 140, 0.95); color: #fff; }
+.modal-box .btn-primary { background: linear-gradient(160deg, #11518f 0%, #0a7ec9 100%); border-color: var(--da-accent2); color: #fff; }
+.modal-box .btn-primary:hover { box-shadow: var(--da-glow); }
+.export-opt { border-color: var(--da-line-2) !important; background: rgba(16, 30, 54, 0.6) !important; }
+.export-opt:hover { border-color: var(--da-accent) !important; background: rgba(74, 168, 255, 0.14) !important; }
+.export-opt-name { color: var(--da-text) !important; }
+.export-opt-desc { color: var(--da-dim) !important; }
+.form-row .f-label { color: var(--da-muted) !important; }
+.form-row input, .form-row textarea { background: rgba(8, 18, 34, 0.9) !important; border-color: var(--da-line-2) !important; color: var(--da-text) !important; }
+.form-row input:focus, .form-row textarea:focus { border-color: var(--da-accent) !important; box-shadow: var(--da-glow); }
+
+/* 26 外壳弹窗（软件说明 / 标题动效等）—— 深色化 */
+.overlay .dialog { background: linear-gradient(180deg, #0d1d33 0%, #0a1526 100%) !important; border-color: var(--da-line-2) !important; }
+.dialog-head { color: #fff !important; }
+.dialog .input { background: rgba(8, 18, 34, 0.9) !important; border-color: var(--da-line-2) !important; color: var(--da-text) !important; }
+
+/* ---------- 7. 轻提示（toast） ---------- */
+.toast {
+  display: block !important;
+  opacity: 0;
+  pointer-events: none;
+  position: fixed;
+  left: 50%;
+  bottom: 52px;
+  top: auto !important;
+  transform: translateX(-50%) translateY(16px);
+  background: rgba(10, 26, 50, 0.96) !important;
+  color: #bfe0ff !important;
+  border: 1px solid rgba(90, 170, 255, 0.4) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 24px rgba(40, 120, 220, 0.3) !important;
+  transition: opacity .24s ease, transform .24s ease;
+  z-index: 40000;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- 8. 命中高亮 ---------- */
+.cell-hl { background: rgba(0, 229, 255, 0.35) !important; color: #eaf6ff !important; }
+
+/* ---------- 9. 滚动条（深色） ---------- */
+.middle-area ::-webkit-scrollbar { width: 10px; height: 10px; }
+.middle-area ::-webkit-scrollbar-track { background: transparent; }
+.middle-area ::-webkit-scrollbar-thumb { background: rgba(90, 170, 255, 0.3); border-radius: 6px; }
+.middle-area ::-webkit-scrollbar-thumb:hover { background: rgba(90, 170, 255, 0.5); }
+
+/* ============================================================
+   10. 门户化顶部（本轮改版）：品牌行 / 一级切换按钮 / 弹出工具栏
+   —— 覆盖 shell.css(26 外壳) 的居中三栏式顶栏，改为门户网站式顶栏。
+   ============================================================ */
+
+/* ---- 10.1 顶栏：品牌 + 模块导航，单行；下挂弹出工具栏 ---- */
+/* 顶部：上圆角、下直角，与中部/底部连成一体（无间隔） */
+.app-header {
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  padding: 10px 14px !important;
+  margin: 0 !important;
+  text-align: left !important;
+  position: relative !important;
+  z-index: 2 !important;
+  background: linear-gradient(180deg, rgba(13, 30, 55, 0.94), rgba(9, 20, 38, 0.88)) !important;
+  border: 1px solid var(--da-line) !important;
+  border-bottom: none !important;
+  border-radius: 14px 14px 0 0 !important;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* 品牌行：Logo + 标题 + 一级切换按钮 + 弹出工具栏（同一行） */
+.hero-row { display: flex !important; align-items: center !important; gap: 14px !important; width: 100% !important; }
+
+.app-header .app-logo {
+  width: 60px !important;
+  height: 60px !important;
+  flex-shrink: 0 !important;
+  border-radius: 14px;
+}
+.app-header .title-box { display: flex !important; flex-direction: column !important; align-items: flex-start !important; }
+.app-title {
+  font-size: 30px !important;
+  line-height: 1.1 !important;
+  letter-spacing: 3px !important;
+  padding: 0 !important;
+  cursor: default !important;
+  font-weight: 800 !important;
+  white-space: nowrap !important;
+}
+.app-title:hover { filter: none !important; }
+.title-text {
+  background-image: linear-gradient(100deg, #33d6ff 0%, #86e4ff 44%, #eaf7ff 100%) !important;
+  -webkit-background-clip: text !important; background-clip: text !important;
+  -webkit-text-fill-color: transparent !important; color: transparent !important;
+  filter: drop-shadow(0 2px 10px rgba(0, 10, 30, 0.85)) drop-shadow(0 0 18px rgba(60, 180, 255, 0.35)) !important;
+}
+.app-subtitle { display: none !important; }
+
+/* ---- 10.2 一级切换按钮：醒目胶囊，选中态高亮发光 ---- */
+#opRecord.op-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 5px !important;
+  flex: 0 0 auto !important;
+  align-self: center !important;
+  background: rgba(8, 18, 34, 0.55) !important;
+  border: 1px solid var(--da-line-2) !important;
+  border-radius: 999px !important;
+  box-shadow: inset 0 1px 0 rgba(160, 210, 255, 0.08), 0 8px 22px rgba(0, 10, 30, 0.4) !important;
+}
+#opRecord .btn {
+  height: 34px !important;
+  padding: 0 18px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(180deg, rgba(26, 54, 92, 0.92), rgba(12, 26, 50, 0.92)) !important;
+  border: 1px solid rgba(90, 170, 255, 0.35) !important;
+  color: var(--da-text) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  transition: all .18s ease !important;
+}
+#opRecord .btn:hover {
+  border-color: var(--da-accent) !important;
+  color: #fff !important;
+  box-shadow: 0 0 14px rgba(74, 168, 255, 0.6) !important;
+  transform: translateY(-1px);
+}
+#opRecord .btn.active {
+  background: linear-gradient(160deg, #1c92e0 0%, #00d2ff 100%) !important;
+  border-color: #9ef0ff !important;
+  color: #051426 !important;
+  box-shadow: 0 0 0 1px rgba(158, 240, 255, 0.6), 0 0 20px 2px rgba(0, 210, 255, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+#opRecord .btn.active:hover { transform: translateY(-1px); filter: brightness(1.06); }
+
+/* ---- 10.3 点击后同级展开的水平工具栏（与按钮同一行） ---- */
+#recTier3 {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 6px 12px !important;
+  overflow-x: auto !important;
+  background: linear-gradient(180deg, rgba(14, 30, 54, 0.92), rgba(9, 20, 38, 0.92)) !important;
+  border: 1px solid var(--da-line-2) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 12px 28px rgba(0, 10, 30, 0.5), inset 0 1px 0 rgba(160, 210, 255, 0.1) !important;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  animation: toolDrop .28s cubic-bezier(.22, .68, .35, 1) both;
+}
+#recTier3.hidden { display: none !important; }
+@keyframes toolDrop {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+#recTier3 .op-tier3-inner { gap: 8px !important; flex-wrap: nowrap !important; white-space: nowrap; }
+
+/* 工具栏内按钮：由下划线文字改为醒目分段按钮 */
+#recTier3 .op-btn3 {
+  height: 30px;
+  padding: 0 14px;
+  font-size: 13px !important;
+  font-weight: 600;
+  color: var(--da-muted) !important;
+  text-decoration: none !important;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  transition: all .16s ease !important;
+}
+#recTier3 .op-btn3:hover {
+  color: #fff !important;
+  font-size: 13px !important;
+  background: rgba(74, 168, 255, 0.16) !important;
+  border-color: rgba(90, 170, 255, 0.45);
+  text-shadow: none !important;
+}
+#recTier3 .op-btn3.situ-on {
+  color: #061626 !important;
+  background: linear-gradient(160deg, #2aa6ec, #00d2ff) !important;
+  border-color: #9ef0ff;
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.45);
+}
+#recTier3 .op-btn3-label { color: var(--da-muted) !important; font-size: 13px; }
+#recTier3 .rec-project-item { color: var(--da-muted) !important; text-decoration: none !important; }
+#recTier3 .rec-project-item.active { color: #fff !important; background: linear-gradient(160deg, #1c92e0, #0a7ec9) !important; }
+#recTier3 .rec-proj-add { color: var(--da-accent2) !important; text-decoration: none !important; }
+#recTier3 .rec-proj-add:hover { color: #fff !important; }
+#recTier3 .op-tier3-sep { background: var(--da-line-2) !important; }
+#recTier3 .op-tier3-hint { color: var(--da-dim) !important; }
+#recTier3 .rec-search-box {
+  height: 30px; padding: 0 10px; font-size: 12.5px;
+  border: 1px solid var(--da-line-2); border-radius: 8px;
+  background: rgba(6, 14, 28, 0.9); color: var(--da-text); outline: none;
+}
+#recTier3 .rec-search-box:focus { border-color: var(--da-accent); box-shadow: var(--da-glow); }
+#recTier3 .rec-search-count { color: var(--da-dim) !important; font-size: 12px; }
+#recTier3 .rec-proj-scroll-btn {
+  width: 26px !important; height: 26px !important;
+  border: 1px solid var(--da-line-2) !important;
+  background: rgba(20, 42, 74, 0.9) !important;
+  color: var(--da-accent) !important;
+  border-radius: 8px !important;
+}
+#recTier3 .rec-proj-scroll-btn:hover { background: rgba(38, 84, 140, 0.95) !important; color: #fff !important; }
+
+/* ============================================================
+   11. 数据管理页（js 文件列表）+ 项目编辑三栏布局
+   ============================================================ */
+
+/* ---- 11.1 数据管理页：主题文件列表 ---- */
+#recDataPanel .rec-data-wrap {
+  flex: 1; min-height: 0; display: flex; flex-direction: column; width: 100%;
+}
+#recDataPanel .rec-data-head {
+  display: flex; align-items: center; gap: 14px; flex-shrink: 0;
+  height: 40px; padding: 0 14px; margin: 0;
+  background: var(--da-head); border: none;
+  border-bottom: 1px solid rgba(90, 170, 255, 0.35);
+  border-radius: 0;
+}
+#recDataPanel .rec-data-title { font-size: 14px; font-weight: 700; color: #eaf6ff; letter-spacing: 1px; }
+#recDataPanel .rec-data-hint { font-size: 12px; color: var(--da-dim); }
+#recDataPanel .rec-data-list {
+  flex: 1; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 14px;
+}
+#recDataPanel .rec-data-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; cursor: pointer; border-radius: 10px;
+  background: linear-gradient(180deg, rgba(18, 36, 64, 0.9), rgba(10, 22, 42, 0.9));
+  border: 1px solid var(--da-line-2);
+  transition: all .16s ease;
+}
+#recDataPanel .rec-data-item:hover {
+  border-color: var(--da-accent);
+  background: linear-gradient(180deg, rgba(26, 54, 92, 0.95), rgba(14, 30, 54, 0.95));
+  box-shadow: 0 0 14px rgba(74, 168, 255, 0.35);
+  transform: translateY(-1px);
+}
+#recDataPanel .rec-data-item.active {
+  border-color: #9ef0ff;
+  background: linear-gradient(160deg, rgba(28, 100, 170, 0.95), rgba(10, 60, 110, 0.95));
+  box-shadow: 0 0 0 1px rgba(158, 240, 255, 0.5), 0 0 18px rgba(0, 210, 255, 0.5);
+}
+#recDataPanel .rec-data-ico {
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; letter-spacing: .5px;
+  color: #051426; background: linear-gradient(160deg, #33d6ff, #1c92e0);
+  box-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
+}
+#recDataPanel .rec-data-name { flex: 1; min-width: 0; font-size: 15px; color: var(--da-text); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#recDataPanel .rec-data-item.active .rec-data-name { color: #fff; }
+#recDataPanel .rec-data-file { flex-shrink: 0; font-size: 12px; color: var(--da-dim); }
+#recDataPanel .rec-data-empty {
+  padding: 26px; text-align: center; color: var(--da-dim); font-size: 13px;
+  border: 1px dashed var(--da-line-2); border-radius: 10px;
+}
+
+/* ---- 11.2 项目编辑：三栏布局（子项列表 / 内容 / 时间轴） ---- */
+#recProjectPanel .rec3-wrap {
+  flex: 1; min-height: 0; display: flex; width: 100%;
+}
+#recProjectPanel .rec3-col {
+  display: flex; flex-direction: column; min-width: 0; min-height: 0;
+}
+#recProjectPanel .rec3-listcol { flex: 0 0 210px; background: var(--da-surface2); border-right: 1px solid var(--da-line); }
+#recProjectPanel .rec3-contentcol { flex: 1 1 0; }
+#recProjectPanel .rec3-tlcol { flex: 1 1 0; background: var(--da-surface); border-left: 1px solid var(--da-line); }
+#recProjectPanel .rec3-divider { width: 6px; flex-shrink: 0; cursor: col-resize; background: rgba(90, 170, 255, 0.12); }
+#recProjectPanel .rec3-head {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  height: 40px; padding: 0 10px;
+  background: var(--da-head); border-bottom: 1px solid rgba(90, 170, 255, 0.35);
+}
+#recProjectPanel .rec3-title { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; color: #eaf6ff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#recProjectPanel .rec3-contentcol .rec3-title { flex: 0 1 auto; }
+#recProjectPanel .rec3-head-actions { display: flex; align-items: center; gap: 6px; }
+#recProjectPanel .rec3-list-body { flex: 1; min-height: 0; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+#recProjectPanel .rec3-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; cursor: pointer; border-radius: 8px;
+  border: 1px solid transparent; color: var(--da-muted);
+  font-size: 13px; transition: all .15s ease;
+}
+#recProjectPanel .rec3-item:hover { background: rgba(74, 168, 255, 0.14); color: #fff; border-color: var(--da-line-2); }
+#recProjectPanel .rec3-item.active {
+  background: linear-gradient(160deg, #1c92e0, #0a7ec9); color: #fff;
+  border-color: #9ef0ff; box-shadow: 0 0 12px rgba(0, 210, 255, 0.4);
+}
+#recProjectPanel .rec3-item.dragging { opacity: .5; }
+#recProjectPanel .rec3-item-dot { flex-shrink: 0; width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 6px rgba(0, 210, 255, 0.5); }
+#recProjectPanel .rec3-item-dot.rec3-dot-empty { background: rgba(140, 190, 255, 0.35); box-shadow: none; }
+#recProjectPanel .rec3-item-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#recProjectPanel .rec3-empty { padding: 22px 10px; text-align: center; color: var(--da-dim); font-size: 12.5px; line-height: 1.9; }
+#recProjectPanel .rec-notepad { flex: 1; min-height: 0; }
+
+/* ---- 12.2 底部设置长条：设置 / 操作说明 / 装饰 三视图（第12次） ---- */
+.setbar {
+  display: block; width: 100%; box-sizing: border-box; position: relative;
+  min-height: 40px; overflow: hidden;
+  background: var(--da-head); border: 1px solid rgba(90, 170, 255, 0.35);
+  border-top: none;
+  border-radius: 0 0 14px 14px; box-shadow: var(--da-glow-soft);
+}
+.setbar .setbar-view { display: none; min-height: 40px; }
+.setbar.setbar-settings .setbar-settings,
+.setbar.setbar-hint .setbar-hint { display: flex; }
+.setbar-settings { align-items: center; gap: 10px; padding: 0 16px; min-width: 0; flex-wrap: nowrap; }
+/* 左侧「主题：+ 名称 + 保存」整体限制在人员列表宽度内，保存按钮不会越出列表右边框 */
+.setbar-main { display: flex; align-items: center; gap: 10px; flex: 0 0 320px; width: 320px; min-width: 0; }
+.setbar-label { font-size: 12.5px; letter-spacing: .5px; color: rgba(190, 220, 255, 0.72); flex-shrink: 0; }
+/* 主题名超长：与保存按钮同一行时用省略号截断，保证按钮不越出人员列表右边框 */
+.setbar-theme {
+  flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 13.5px; font-weight: 700; color: #eaf6ff; text-shadow: 0 0 8px rgba(120, 200, 255, 0.55);
+}
+/* 关系拓扑页的操作提示：占满剩余宽度，靠右，单行省略 */
+.setbar-reltip { display: none; flex: 1 1 auto; min-width: 0; margin-left: auto; text-align: right;
+  font-size: 11.5px; letter-spacing: .3px; color: rgba(160, 198, 236, 0.72);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.setbar-reltip.show { display: block; }
+.setbar-theme.empty { font-weight: 400; color: rgba(160, 195, 230, 0.6); text-shadow: none; }
+/* 保存按钮：底部设置栏的主操作，做成高对比主按钮（渐变 + 描边 + 光晕 + 按下反馈） */
+/* 保存按钮固定在左侧栏宽度之内，不越出人员列表右边框 */
+.setbar-save {
+  flex: 0 0 auto; height: 28px; padding: 0 20px; cursor: pointer; font-family: inherit;
+  font-size: 13px; font-weight: 700; letter-spacing: 2px; color: #fff;
+  background: linear-gradient(160deg, #2ea8ff 0%, #1479d6 55%, #0a5fae 100%);
+  border: 1px solid #9ee4ff; border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(120, 220, 255, 0.28), 0 0 14px rgba(46, 168, 255, 0.55), 0 2px 6px rgba(0, 20, 60, 0.55);
+  text-shadow: 0 1px 2px rgba(0, 24, 60, 0.5);
+  transition: transform .15s ease, box-shadow .18s ease, filter .18s ease;
+}
+.setbar-save:hover {
+  filter: brightness(1.12); color: #fff;
+  box-shadow: 0 0 0 1px rgba(160, 235, 255, 0.6), 0 0 22px rgba(46, 168, 255, 0.85), 0 3px 10px rgba(0, 20, 60, 0.6);
+}
+.setbar-save:active { transform: translateY(1px) scale(0.985); filter: brightness(0.96); }
+.setbar-save:focus-visible { outline: 2px solid #9ee4ff; outline-offset: 2px; }
+.setbar-hint { align-items: center; justify-content: center; padding: 0 12px; }
+.setbar-hint .footer-hint { max-width: 100%; }
+.setbar-hint .hint-view { max-width: 100%; }
+
+/* 顶栏本地桥接服务连接状态徽标（固定在最右侧；单击切换为署名徽标） */
+.rec-svc-status {
+  flex: 0 0 auto !important; display: inline-flex; align-items: center; gap: 7px;
+  height: 30px; padding: 0 12px; white-space: nowrap; cursor: pointer; user-select: none;
+  font-size: 12.5px; letter-spacing: .5px; color: var(--da-muted);
+  margin-left: auto !important;
+  background: rgba(8, 18, 34, 0.72); border: 1px solid var(--da-line-2); border-radius: 999px;
+  transition: all .18s ease;
+}
+.rec-svc-status .rec-svc-live,
+.rec-svc-status .rec-svc-brand { display: inline-flex; align-items: center; gap: 6px; }
+.rec-svc-status .rec-svc-brand { display: none; }
+.rec-svc-status.brand .rec-svc-live { display: none; }
+.rec-svc-status.brand .rec-svc-brand { display: inline-flex; }
+.rec-svc-status.brand { color: #fff; border-color: rgba(158, 240, 255, 0.55); }
+.rec-svc-brand-name {
+  font-weight: 800; letter-spacing: 1px;
+  background-image: linear-gradient(100deg, #ffd479 0%, #ff9aa6 42%, #9ef0ff 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  filter: drop-shadow(0 0 8px rgba(255, 190, 120, 0.35));
+}
+.rec-svc-brand-date {
+  font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: .5px;
+  background-image: linear-gradient(100deg, #7fe0ff 0%, #86e4ff 55%, #c8f4ff 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  filter: drop-shadow(0 0 8px rgba(90, 200, 255, 0.35));
+}
+.rec-svc-brand-plain { color: #fff; }
+.rec-svc-status:hover { color: #fff; border-color: var(--da-accent); }
+.rec-svc-dot {
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+  background: #8496a8; box-shadow: 0 0 8px rgba(130, 150, 170, 0.6);
+}
+.rec-svc-status.on { color: #9ff0c8; border-color: rgba(52, 211, 153, 0.6); }
+.rec-svc-status.on .rec-svc-dot { background: #34d399; box-shadow: 0 0 10px rgba(52, 211, 153, 0.85); }
+.rec-svc-status.on:hover { border-color: #34d399; box-shadow: 0 0 14px rgba(52, 211, 153, 0.4); }
+.rec-svc-status.off { color: #ff9aa6; border-color: rgba(255, 118, 133, 0.55); }
+.rec-svc-status.off .rec-svc-dot { background: #ff7685; box-shadow: 0 0 10px rgba(255, 118, 133, 0.8); }
+.rec-svc-status.off:hover { border-color: #ff7685; box-shadow: 0 0 14px rgba(255, 118, 133, 0.4); }
+.rec-svc-status.warn { color: #ffd479; border-color: rgba(255, 193, 84, 0.6); }
+.rec-svc-status.warn .rec-svc-dot { background: #ffc154; box-shadow: 0 0 10px rgba(255, 193, 84, 0.85); }
+.rec-svc-status.busy .rec-svc-dot { animation: recSvcPulse 1s ease-in-out infinite; }
+@keyframes recSvcPulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+
+/* 底部设置栏：检索（位于「保存」之后）与时间轴排列设置（右对齐） */
+.setbar-search { display: none; align-items: center; gap: 6px; min-width: 0; flex-shrink: 1; }
+.setbar-search.show { display: flex; }
+.setbar-search .rec-search-box { width: 132px; flex-shrink: 1; min-width: 70px; }
+.setbar-mini {
+  flex: 0 0 auto; height: 24px; padding: 0 9px; cursor: pointer; font-family: inherit;
+  font-size: 12px; letter-spacing: .5px; white-space: nowrap; color: #cfe6ff;
+  background: rgba(16, 38, 68, 0.7); border: 1px solid rgba(90, 170, 255, 0.4); border-radius: 6px;
+}
+.setbar-mini:hover { background: rgba(42, 92, 155, 0.9); color: #fff; border-color: rgba(140, 205, 255, 0.7); }
+.setbar-mini.active { color: #fff; background: linear-gradient(160deg, #1c92e0, #0a7ec9); border-color: #9ef0ff; box-shadow: 0 0 10px rgba(0, 210, 255, 0.4); }
+.setbar-only { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; cursor: pointer; font-size: 12px; color: rgba(190, 220, 255, 0.82); }
+.setbar-only input { margin: 0; cursor: pointer; }
+.setbar-mode { display: none; align-items: center; gap: 6px; margin-left: auto; min-width: 0; flex-shrink: 0; }
+.setbar-dual { display: none; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-width: 0; }
+.setbar-dual-item { min-width: 0; font-size: 12.5px; letter-spacing: .5px; color: rgba(190, 220, 255, 0.72);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.setbar-dual-item.on { font-weight: 700; color: #eaf6ff; text-shadow: 0 0 10px rgba(74, 168, 255, 0.45); }
+.setbar-dual-mode .setbar-dual { display: flex; }
+.setbar-dual-mode .setbar-main,
+.setbar-dual-mode .setbar-mode { display: none !important; }
+.setbar-mode.show { display: flex; }
+.setbar-mode-label { font-size: 12px; letter-spacing: 1px; color: rgba(160, 200, 240, 0.8); }
+.setbar-zoom { display: inline-flex; align-items: center; gap: 2px; }
+.setbar-zoom-val { min-width: 42px; text-align: center; font-size: 12px; color: #dceeff; }
+
+/* ============================================================
+    11. 第30次调整：顶栏压缩 / 备注配色互换
+    ============================================================ */
+
+/* ---- 11.1 顶栏整体压缩：logo 46px，行距收紧 ---- */
+.app-header { gap: 8px !important; padding: 6px 14px !important; }
+.hero-row { gap: 10px !important; }
+.app-header .app-logo { width: 46px !important; height: 46px !important; border-radius: 11px !important; }
+.app-title { font-size: 26px !important; letter-spacing: 2px !important; }
+
+/* ---- 11.2 备注配色互换 ----
+   多项目窗体（浅底 #eaf3fd）：去掉深色底，改为项目色深字
+   单项目记事本（深底）：改为白底 + 项目色深字
+   时间轴内的 .rec-remark 不在上述作用域，保持原「深底白字」 */
+.rec-proj-win-body .rec-remark {
+  background: none !important;
+  color: var(--rm-c) !important;
+  padding: 0 !important;
+  font-weight: 700 !important;
+}
+.rec-notepad .rec-remark {
+  background: #ffffff !important;
+  color: var(--rm-c) !important;
+  border-radius: 3px !important;
+}
+

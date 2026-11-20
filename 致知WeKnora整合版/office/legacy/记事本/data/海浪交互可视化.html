@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<!--
+    Tidal Inscription — 潮痕 / 交互式参数调节器
+    本文件为「电子记事本」登录界面海浪背景的可视化交互模板。
+    结构、Anthropic 配色、种子导航与操作按钮保持固定；算法、参数与配色区可变。
+    p5.js 使用本地 ./p5.min.js（与本文件同位于 data/ 目录）。
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tidal Inscription · 潮痕</title>
+    <script src="./p5.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --anthropic-dark: #141413;
+            --anthropic-light: #faf9f5;
+            --anthropic-mid-gray: #b0aea5;
+            --anthropic-light-gray: #e8e6dc;
+            --anthropic-orange: #d97757;
+            --anthropic-blue: #6a9bcc;
+            --anthropic-green: #788c5d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--anthropic-light) 0%, #f5f3ee 100%);
+            min-height: 100vh;
+            color: var(--anthropic-dark);
+        }
+        .container { display: flex; min-height: 100vh; padding: 20px; gap: 20px; }
+        .sidebar {
+            width: 320px; flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 24px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(20, 20, 19, 0.1);
+            overflow-y: auto; overflow-x: hidden;
+        }
+        .sidebar h1 { font-family: 'Lora', serif; font-size: 24px; font-weight: 500; color: var(--anthropic-dark); margin-bottom: 8px; }
+        .sidebar .subtitle { color: var(--anthropic-mid-gray); font-size: 14px; margin-bottom: 32px; line-height: 1.4; }
+        .control-section { margin-bottom: 32px; }
+        .control-section h3 { font-size: 16px; font-weight: 600; color: var(--anthropic-dark); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .control-section h3::before { content: '•'; color: var(--anthropic-orange); font-weight: bold; }
+        .seed-input {
+            width: 100%; background: var(--anthropic-light); padding: 12px; border-radius: 8px;
+            font-family: 'Courier New', monospace; font-size: 14px; margin-bottom: 12px;
+            border: 1px solid var(--anthropic-light-gray); text-align: center;
+        }
+        .seed-input:focus { outline: none; border-color: var(--anthropic-orange); box-shadow: 0 0 0 2px rgba(217, 119, 87, 0.1); background: white; }
+        .seed-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+        .regen-button { margin-bottom: 0; }
+        .control-group { margin-bottom: 20px; }
+        .control-group label { display: block; font-size: 14px; font-weight: 500; color: var(--anthropic-dark); margin-bottom: 8px; }
+        .slider-container { display: flex; align-items: center; gap: 12px; }
+        .slider-container input[type="range"] {
+            flex: 1; height: 4px; background: var(--anthropic-light-gray);
+            border-radius: 2px; outline: none; -webkit-appearance: none;
+        }
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 16px; height: 16px; background: var(--anthropic-orange);
+            border-radius: 50%; cursor: pointer; transition: all 0.2s ease;
+        }
+        .slider-container input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.1); background: #c86641; }
+        .slider-container input[type="range"]::-moz-range-thumb {
+            width: 16px; height: 16px; background: var(--anthropic-orange);
+            border-radius: 50%; border: none; cursor: pointer; transition: all 0.2s ease;
+        }
+        .value-display { font-family: 'Courier New', monospace; font-size: 12px; color: var(--anthropic-mid-gray); min-width: 60px; text-align: right; }
+        .color-group { margin-bottom: 16px; }
+        .color-group label { display: block; font-size: 12px; color: var(--anthropic-mid-gray); margin-bottom: 4px; }
+        .color-picker-container { display: flex; align-items: center; gap: 8px; }
+        .color-picker-container input[type="color"] {
+            width: 32px; height: 32px; border: none; border-radius: 6px; cursor: pointer; background: none; padding: 0;
+        }
+        .color-value { font-family: 'Courier New', monospace; font-size: 12px; color: var(--anthropic-mid-gray); }
+        .button {
+            background: var(--anthropic-orange); color: white; border: none; padding: 10px 16px;
+            border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer;
+            transition: all 0.2s ease; width: 100%;
+        }
+        .button:hover { background: #c86641; transform: translateY(-1px); }
+        .button:active { transform: translateY(0); }
+        .button.secondary { background: var(--anthropic-blue); }
+        .button.secondary:hover { background: #5a8bb8; }
+        .button.tertiary { background: var(--anthropic-green); }
+        .button.tertiary:hover { background: #6b7b52; }
+        .button-row { display: flex; gap: 8px; }
+        .button-row .button { flex: 1; }
+        .canvas-area { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; }
+        #canvas-container {
+            width: 100%; max-width: 1000px; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 20px 40px rgba(20, 20, 19, 0.1); background: white;
+        }
+        #canvas-container canvas { display: block; width: 100% !important; height: auto !important; }
+        .loading { display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--anthropic-mid-gray); }
+        @media (max-width: 600px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; }
+            .canvas-area { padding: 20px; }
+        }
+    </style>
+<script src="../../bridge-session.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>Tidal Inscription</h1>
+            <div class="subtitle">潮痕 · 缓慢翻涌的海浪背景<br>登录界面可视化参数调节器</div>
+
+            <div class="control-section">
+                <h3>Seed</h3>
+                <input type="number" id="seed-input" class="seed-input" value="20260928" onchange="updateSeed()">
+                <div class="seed-controls">
+                    <button class="button secondary" onclick="previousSeed()">← Prev</button>
+                    <button class="button secondary" onclick="nextSeed()">Next →</button>
+                </div>
+                <button class="button tertiary regen-button" onclick="randomSeedAndUpdate()">↻ Random</button>
+            </div>
+
+            <div class="control-section">
+                <h3>Parameters</h3>
+
+                <div class="control-group">
+                    <label>浪层数量 Layers</label>
+                    <div class="slider-container">
+                        <input type="range" id="layers" min="3" max="12" step="1" value="8" oninput="updateParam('layers', this.value)">
+                        <span class="value-display" id="layers-value">8</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>翻涌速度 Wave Speed</label>
+                    <div class="slider-container">
+                        <input type="range" id="waveSpeed" min="0.02" max="0.60" step="0.01" value="0.14" oninput="updateParam('waveSpeed', this.value)">
+                        <span class="value-display" id="waveSpeed-value">0.14</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>浪高 Amplitude</label>
+                    <div class="slider-container">
+                        <input type="range" id="amplitude" min="10" max="120" step="1" value="58" oninput="updateParam('amplitude', this.value)">
+                        <span class="value-display" id="amplitude-value">58</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>波长 Wavelength</label>
+                    <div class="slider-container">
+                        <input type="range" id="wavelength" min="0.3" max="2.2" step="0.05" value="1.0" oninput="updateParam('wavelength', this.value)">
+                        <span class="value-display" id="wavelength-value">1.00</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>湍流 Turbulence</label>
+                    <div class="slider-container">
+                        <input type="range" id="turbulence" min="0" max="1.5" step="0.05" value="0.55" oninput="updateParam('turbulence', this.value)">
+                        <span class="value-display" id="turbulence-value">0.55</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>泡沫 Foam（白点，透明度 100%）</label>
+                    <div class="slider-container">
+                        <input type="range" id="foam" min="0" max="100" step="1" value="30" oninput="updateParam('foam', this.value)">
+                        <span class="value-display" id="foam-value">30</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>Colors</h3>
+                <div class="color-group">
+                    <label>海面亮色 Crest</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="color1" value="#8fd3e8" onchange="updateColor('color1', this.value)">
+                        <span class="color-value" id="color1-value">#8fd3e8</span>
+                    </div>
+                </div>
+                <div class="color-group">
+                    <label>海面中色 Mid</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="color2" value="#2d8fc4" onchange="updateColor('color2', this.value)">
+                        <span class="color-value" id="color2-value">#2d8fc4</span>
+                    </div>
+                </div>
+                <div class="color-group">
+                    <label>海底深色 Deep</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="color3" value="#0d2b4b" onchange="updateColor('color3', this.value)">
+                        <span class="color-value" id="color3-value">#0d2b4b</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>Actions</h3>
+                <div class="button-row">
+                    <button class="button" onclick="resetParameters()">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-area">
+            <div id="canvas-container">
+                <div class="loading">Initializing generative art...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════════
+        // PARAMETERS
+        // ═══════════════════════════════════════════════════════════════════
+        let params = {
+            seed: 20260928,
+            layers: 8,
+            waveSpeed: 0.14,
+            amplitude: 58,
+            wavelength: 1.0,
+            turbulence: 0.55,
+            foam: 30,
+            colorPalette: ['#8fd3e8', '#2d8fc4', '#0d2b4b']
+        };
+        let defaultParams = JSON.parse(JSON.stringify(params));
+
+        let t = 0;
+        let foamSeeds = [];
+        let deepBase, midBase;
+
+        // 整体海浪透明度 50%（白点单独设置，不受此影响）
+        const WAVE_OPACITY = 0.5;
+        const FOAM_OPACITY = 1.0;
+
+        // ═══════════════════════════════════════════════════════════════════
+        // SETUP
+        // ═══════════════════════════════════════════════════════════════════
+        function setup() {
+            let canvas = createCanvas(1200, 800);
+            canvas.parent('canvas-container');
+            initializeSystem();
+            let l = document.querySelector('.loading');
+            if (l) l.style.display = 'none';
+        }
+
+        function initializeSystem() {
+            randomSeed(params.seed);
+            noiseSeed(params.seed);
+            t = 0;
+
+            deepBase = color(params.colorPalette[2]);
+            midBase = color(params.colorPalette[1]);
+
+            // 泡沫粒子：位置与大小由种子决定，随时间缓慢漂游
+            foamSeeds = [];
+            let n = Math.floor(params.foam * 3);
+            for (let i = 0; i < n; i++) {
+                foamSeeds.push({
+                    x: random(0, 1),
+                    phase: random(TWO_PI),
+                    size: random(0.6, 2.6),
+                    drift: random(0.2, 1.0),
+                    depth: random(0.15, 1.0)
+                });
+            }
+            clear();
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // WAVE FIELD — 层积的涌浪
+        // ═══════════════════════════════════════════════════════════════════
+        // 从顶部（深）到底部（浅）的垂直渐变色
+        function deepToLightColor(f) {
+            let deep = color(params.colorPalette[2]);
+            let mid = color(params.colorPalette[1]);
+            let crest = color(params.colorPalette[0]);
+            if (f < 0.5) return lerpColor(deep, mid, f / 0.5);
+            return lerpColor(mid, crest, (f - 0.5) / 0.5);
+        }
+
+        // 每一层读其脊线中段的颜色，保证「从下到上逐渐加深」且层间有层次
+        function layerColor(i, layers) {
+            let f = i / Math.max(1, layers - 1);        // 0 = 顶部/深, 1 = 底部/浅
+            let r = ridgeHeight(width * 0.5, i, layers, t);
+            let frac = constrain((r.y + r.h) / height, 0, 1);
+            return deepToLightColor(frac);
+        }
+
+        // 返回某一层在时刻 tt 的脊线高度函数
+        function ridgeHeight(x, layer, layers, tt) {
+            let depth = layer / Math.max(1, layers - 1);       // 0 顶 1 底
+            let pad = params.amplitude * 1.15 + 20;
+            let baseY = map(layer, 0, layers - 1, pad, height - pad * 0.45);
+            let amp = params.amplitude * (0.45 + depth * 0.85);
+            let wl = params.wavelength * (1.0 + depth * 0.55);
+            let speed = params.waveSpeed * (0.5 + depth * 1.3);
+            let phase = layer * 0.9;
+
+            let y = sin(x * 0.006 * wl + tt * speed * 0.9 + phase) * amp * 0.55
+                  + sin(x * 0.013 * wl - tt * speed * 1.4 + phase * 1.7) * amp * 0.30
+                  + sin(x * 0.028 * wl + tt * speed * 0.6 + phase * 2.3) * amp * 0.15;
+
+            // 缓慢漂移的 Perlin 噪声调制振幅——长涌的"翻涌"感
+            let nz = noise(x * 0.0016 + layer * 3.7, tt * 0.05) - 0.5;
+            y += nz * amp * params.turbulence * 1.6;
+            return { y: baseY, h: y };
+        }
+
+        function drawLayer(layer, layers) {
+            let col = layerColor(layer, layers);
+            noStroke();
+            fill(red(col), green(col), blue(col), 255);
+
+            // 逐渐升高的锯齿状波浪脊线，波浪采取统一透明度，使层间颜色自然叠合
+            beginShape();
+            vertex(-40, height + 40);
+            for (let x = -40; x <= width + 40; x += 10) {
+                let r = ridgeHeight(x, layer, layers, t);
+                vertex(x, r.y + r.h);
+            }
+            vertex(width + 40, height + 40);
+            endShape(CLOSE);
+        }
+
+        function drawFoam(layers) {
+            if (foamSeeds.length === 0) return;
+            noStroke();
+            for (let i = 0; i < foamSeeds.length; i++) {
+                let p = foamSeeds[i];
+                let x = (p.x * width + t * 12 * p.drift) % (width + 40) - 20;
+                if (x < -20) x += width + 40;
+                let depth = p.depth;
+                let layer = Math.floor(depth * (layers - 1));
+                let r = ridgeHeight(x, layer, layers, t);
+                let yBase = r.y + r.h;
+                let y = yBase + sin(t * 0.8 + p.phase) * 6 + (1 - depth) * 4;
+                fill(255, 255, 255, 255);
+                ellipse(x, y, p.size * (0.7 + depth), p.size * (0.45 + depth * 0.5));
+            }
+        }
+
+        function draw() {
+            clear();
+            // 全屏底色（最深处），与波浪同透明度，避免露出「蓝天/海平面」分层
+            noStroke();
+            let deep = color(params.colorPalette[2]);
+            drawingContext.globalAlpha = WAVE_OPACITY;
+            fill(red(deep), green(deep), blue(deep));
+            rect(0, 0, width, height);
+
+            // 整片海浪铺满屏幕，从下（浅）到上（深）逐渐加深
+            let layers = Math.max(2, Math.round(params.layers));
+            drawingContext.globalAlpha = WAVE_OPACITY;
+            for (let i = 0; i < layers; i++) drawLayer(i, layers);
+
+            // 白点（泡沫）单独透明度，默认 100%
+            drawingContext.globalAlpha = FOAM_OPACITY;
+            drawFoam(layers);
+
+            drawingContext.globalAlpha = 1;
+            t += 0.016;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // UI HANDLERS
+        // ═══════════════════════════════════════════════════════════════════
+        function updateParam(name, value) {
+            params[name] = parseFloat(value);
+            let disp = document.getElementById(name + '-value');
+            if (disp) disp.textContent = (name === 'wavelength') ? params[name].toFixed(2) : value;
+            initializeSystem();
+        }
+
+        function updateColor(id, value) {
+            let idx = { color1: 0, color2: 1, color3: 2 }[id];
+            params.colorPalette[idx] = value;
+            let disp = document.getElementById(id + '-value');
+            if (disp) disp.textContent = value;
+            initializeSystem();
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // SEED CONTROLS
+        // ═══════════════════════════════════════════════════════════════════
+        function updateSeedDisplay() {
+            document.getElementById('seed-input').value = params.seed;
+        }
+        function updateSeed() {
+            let input = document.getElementById('seed-input');
+            let newSeed = parseInt(input.value);
+            if (newSeed && newSeed > 0) { params.seed = newSeed; initializeSystem(); }
+            else updateSeedDisplay();
+        }
+        function previousSeed() { params.seed = Math.max(1, params.seed - 1); updateSeedDisplay(); initializeSystem(); }
+        function nextSeed() { params.seed = params.seed + 1; updateSeedDisplay(); initializeSystem(); }
+        function randomSeedAndUpdate() { params.seed = Math.floor(Math.random() * 999999) + 1; updateSeedDisplay(); initializeSystem(); }
+
+        function resetParameters() {
+            params = JSON.parse(JSON.stringify(defaultParams));
+            document.getElementById('layers').value = params.layers;
+            document.getElementById('layers-value').textContent = params.layers;
+            document.getElementById('waveSpeed').value = params.waveSpeed;
+            document.getElementById('waveSpeed-value').textContent = params.waveSpeed;
+            document.getElementById('amplitude').value = params.amplitude;
+            document.getElementById('amplitude-value').textContent = params.amplitude;
+            document.getElementById('wavelength').value = params.wavelength;
+            document.getElementById('wavelength-value').textContent = params.wavelength.toFixed(2);
+            document.getElementById('turbulence').value = params.turbulence;
+            document.getElementById('turbulence-value').textContent = params.turbulence;
+            document.getElementById('foam').value = params.foam;
+            document.getElementById('foam-value').textContent = params.foam;
+            document.getElementById('color1').value = params.colorPalette[0];
+            document.getElementById('color1-value').textContent = params.colorPalette[0];
+            document.getElementById('color2').value = params.colorPalette[1];
+            document.getElementById('color2-value').textContent = params.colorPalette[1];
+            document.getElementById('color3').value = params.colorPalette[2];
+            document.getElementById('color3-value').textContent = params.colorPalette[2];
+            updateSeedDisplay();
+            initializeSystem();
+        }
+
+        window.addEventListener('load', function() { updateSeedDisplay(); });
+    </script>
+</body>
+</html>

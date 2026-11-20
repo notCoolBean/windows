@@ -1,0 +1,13 @@
+/.build-tools/
+/dist/
+/bundled-models/
+node_modules/
+__pycache__/
+.DS_Store
+*.pyc
+*.gguf
+*.sqlite3*
+*.log
+*.syso
+.env
+.env.lite

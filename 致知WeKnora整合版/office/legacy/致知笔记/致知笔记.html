@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>致知笔记</title>
+<link rel="icon" href="图标/logo.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="图标/logo-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="图标/logo-192.png">
+    <link rel="apple-touch-icon" href="图标/logo-180.png">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/shell.css">
+<link rel="stylesheet" href="css/wenbao.css">
+<script src="../bridge-session.js"></script>
+</head>
+<body>
+
+<header id="mainHeader">
+  <div id="headerLeft">
+    <h1>
+      <img src="图标/logo.png" alt="致知笔记" id="headerLogo" title="全屏 / 退出全屏">
+      <span id="headerHome" title="致知笔记">致知笔记</span>
+    </h1>
+  </div>
+  <div id="npHeaderOps" class="npHeaderOps">
+    <span class="npHdrGroup">
+      <button type="button" class="npHdrBtn npHdrData" id="npToggleTopicBtn" data-pane="topic" title="显示 / 隐藏左侧数据文件列表">数据文件</button>
+      <button type="button" class="npHdrBtn npHdrArticle" id="npToggleDirBtn" data-pane="dir" title="显示 / 隐藏中部文章列表">文章列表</button>
+    </span>
+    <span class="npHdrSep" aria-hidden="true"></span>
+    <span class="npHdrGroup">
+      <button type="button" class="npHdrBtn npHdrRef" id="npPreviewBtn" title="参考资料：显示其他笔记 / 本地文件 / 附件">参考资料</button>
+    </span>
+    <span class="npHdrSep" aria-hidden="true"></span>
+    <span class="npHdrGroup">
+      <button type="button" class="npHdrBtn npHdrMv" id="npMultiViewBtn" title="多窗预览：并排对照多个笔记 / 本地文件">多窗预览</button>
+    </span>
+    <button type="button" class="npHdrBtn npHdrIcon" id="notepadSearchBtn" onclick="toggleNotepadSearch(event)" title="检索">🔍</button>
+    <div class="npHdrSearchHost" id="npHdrSearchHost"></div>
+  </div>
+  <div id="headerTools">
+    <button class="navBtn navIconBtn" id="zoomInBtn" title="放大"><img src="data/enlarge.ico" alt=""></button>
+    <button class="navBtn navIconBtn" id="zoomOutBtn" title="缩小"><img src="data/reduce.ico" alt=""></button>
+  </div>
+</header>
+
+<main id="mainContent">
+
+﻿
+<!-- ===== 源 电子记事本.html 121-357 ===== -->
+        <div id="notepadPanel">
+            <div class="npResizeHandleTop" id="npResizeHandleTop"></div>
+            <div class="npResizeHandle" id="npResizeHandle"></div>
+            <div class="npResizeHandleBottom" id="npResizeHandleBottom"></div>
+            <div class="npResizeHandleLeft" id="npResizeHandleLeft"></div>
+            <div class="npDragStrip" id="notepadDragHandle" title="拖动移动面板（双击自适应高度）"></div>
+            <div class="npWorkspace" id="npWorkspace">
+                <aside class="npTopicPane" id="npTopicPane">
+                    <div class="npPaneHead">
+                        <span class="npPaneTitle">数据</span>
+                        <span class="npPaneMeta npCountBtn" id="npTopicTotal" title="点击查看类别与笔记文件数量"></span>
+                        <div class="npHeadNav" id="npHeadNav">
+                            <button type="button" class="npNavEdge" id="npHeadNavLeft" title="向左滚动" aria-label="向左滚动">‹</button>
+                            <div class="npHeadNavScroll" id="npHeadNavScroll">
+                                <button type="button" class="npPaneBtn npPaneBtnFolder" id="npLibFolderBtn" title="选择 / 更换数据文件夹"><img class="npFolderIco" src="data/type/folder.ico" alt=""><span>选择</span></button>
+                                <button type="button" class="npPaneBtn" id="npTopicAddBtn" title="新增类别或新增笔记">＋ 新增</button>
+                                <button type="button" class="npPaneBtn npPaneBtnIcon npLibRefreshBtn" id="npLibRefreshBtn" data-libact="refresh" title="重新扫描文件夹" aria-label="刷新">
+                                    <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path fill="currentColor" d="M8 2.6a5.4 5.4 0 1 0 5.16 6.98h-1.6A3.86 3.86 0 1 1 8 4.14c1.02 0 1.95.4 2.64 1.05l-1.3 1.3h3.8V2.7l-1.4 1.4A5.36 5.36 0 0 0 8 2.6z"/></svg>
+                                </button>
+                            </div>
+                            <button type="button" class="npNavEdge" id="npHeadNavRight" title="向右滚动" aria-label="向右滚动">›</button>
+                        </div>
+                    </div>
+                    <div class="npTopicList" id="npTopicList"></div>
+                </aside>
+                <div class="npSplitter" id="npSplitterTopic" data-splitter="topic" role="separator" aria-orientation="vertical" title="拖动调节笔记列表宽度（双击恢复 2:3:5）"></div>
+                <section class="npDirPane" id="npDirPane">
+                    <div class="npPaneHead npDirHead">
+                        <button type="button" class="npDirArrow" id="npCollapseTopicBtn" title="收起笔记列表" aria-expanded="true">‹</button>
+                        <div class="npDirTabs" id="npDirTabs" title="标题：按文章标题浏览 / 提纲：当前选中文章的层级标题 / 镜像：正文对照 / 白板：临时粘贴">
+                            <button type="button" class="npDirTab active" data-dirmode="titles">标题</button>
+                            <button type="button" class="npDirTab" data-dirmode="outline">提纲</button>
+                            <button type="button" class="npDirTab" data-dirmode="mirror">镜像</button>
+                            <button type="button" class="npDirTab" data-dirmode="whiteboard">白板</button>
+                        </div>
+                        <button type="button" class="npPaneBtn npPaneBtnIcon npDirRefresh" id="npDirRefreshBtn" title="按当前内容刷新" aria-label="刷新">⟳</button>
+                    </div>
+                    <div class="npDirList" id="npDirList"></div>
+                </section>
+                <div class="npSplitter" id="npSplitterDir" data-splitter="dir" role="separator" aria-orientation="vertical" title="拖动调节标题栏宽度（双击恢复 2:3:5）"></div>
+                <section class="npEditorPane" id="npEditorPane">
+            <div class="notepadContent">
+                <div class="notepadTitleRow" id="notepadTitleRow">
+                    <span id="notepadOpenFileLabel" style="font-size:12px;color:#999;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;"></span>
+                    <input type="text" id="notepadTitle" class="notepadTitle color0" placeholder="（无标题）" readonly tabindex="-1" title="点击可修改标题" onclick="showNotepadRename()" onmouseenter="this.title=(this.value||'（无标题）');">
+                    <div class="notepadToolbarScroller" id="notepadToolbarScroller">
+                        <button type="button" class="notepadToolbarScrollBtn" id="notepadToolbarScrollLeft" onclick="scrollNotepadToolbar(-1)" title="向左翻动">‹</button>
+                        <div class="notepadToolbarStrip" id="notepadToolbarStrip">
+                            <div class="paDropdownWrap">
+                                <button class="paActionBtn paDropdownBtn" id="notepadDisplayBtn" onclick="notepadToggleDropdown(event, 'display')">显示</button>
+                                <div class="paDropdownMenu" id="notepadDisplayMenu" style="left:auto;right:0;min-width:96px;">
+                                    <div class="paDropdownItem paCtxHasSub" data-submenu="npZoomContent">
+                                        <span>缩放</span><span class="paCtxArrow">▸</span>
+                                        <div class="paCtxSubmenu" data-submenu-for="npZoomContent">
+                                            <div class="paCtxItem" onclick="notepadZoomIn();paCloseDropdowns()">放大</div>
+                                            <div class="paCtxItem" onclick="notepadZoomOut();paCloseDropdowns()">缩小</div>
+                                        </div>
+                                    </div>
+                                    <div class="paDropdownItem" data-dmode="highlight" id="notepadDisplayHlItem" onclick="setNotepadDisplayMode('highlight');paCloseDropdowns()">只显示高亮</div>
+                                    <div class="paDropdownItem" id="notepadDisplayLineItem" onclick="toggleNotepadNotebookStyle(currentNotepadTab);paCloseDropdowns()">显示行线</div>
+                                    <div class="paDropdownItem" id="notepadDisplayInvisItem" onclick="toggleNotepadInvisibles();paCloseDropdowns()">显示隐藏字符</div>
+                                </div>
+                            </div>
+                            <div class="paDropdownWrap" style="position:relative;">
+                                <button class="paActionBtn paDropdownBtn" onclick="notepadToggleDropdown(event, 'text')">文字</button>
+                                <div class="paDropdownMenu" id="notepadTextMenu" style="left:auto;right:0;min-width:100px;">
+                                    <div class="paDropdownItem paCtxHasSub" data-submenu="ntFont">
+                                        <span>字体</span><span class="paCtxArrow">▸</span>
+                                        <div class="paCtxSubmenu" data-submenu-for="ntFont">
+                                            <div class="paCtxItem" onclick="applyFontSelect('SimHei');paCloseDropdowns()">黑体</div>
+                                            <div class="paCtxItem" onclick="applyFontSelect('KaiTi');paCloseDropdowns()">楷体_GB1212</div>
+                                            <div class="paCtxItem" onclick="applyFontSelect('FangSong');paCloseDropdowns()">仿宋_GB1212</div>
+                                            <div class="paCtxItem" onclick="applyFontSelect('FZXiaoBiaoSong');paCloseDropdowns()">方正小标宋简体</div>
+                                        </div>
+                                    </div>
+                                    <div class="paDropdownItem paCtxHasSub" data-submenu="ntSize">
+                                        <span>字号</span><span class="paCtxArrow">▸</span>
+                                        <div class="paCtxSubmenu" data-submenu-for="ntSize">
+                                            <div class="paCtxItem" onclick="applyFontSizeSelect('8');paCloseDropdowns()">8</div>
+                                            <div class="paCtxItem" onclick="applyFontSizeSelect('10');paCloseDropdowns()">10</div>
+                                            <div class="paCtxItem" onclick="applyFontSizeSelect('12');paCloseDropdowns()">12</div>
+                                            <div class="paCtxItem" onclick="applyFontSizeSelect('14');paCloseDropdowns()">14（四号）</div>
+                                            <div class="paCtxItem" onclick="applyFontSizeSelect('16');paCloseDropdowns()">16（三号）</div>
+                                            <div class="paCtxItem" onclick="applyFontSizeSelect('20');paCloseDropdowns()">20（二号）</div>
+                                            <div class="paCtxItem" onclick="applyFontSizeSelect('22');paCloseDropdowns()">22</div>
+                                        </div>
+                                    </div>
+                                    <div class="paDropdownItem paCtxHasSub" data-submenu="ntAlign">
+                                        <span>对齐</span><span class="paCtxArrow">▸</span>
+                                        <div class="paCtxSubmenu" data-submenu-for="ntAlign">
+                                            <div class="paCtxItem" onclick="applyAlign('left');paCloseDropdowns()">左对齐</div>
+                                            <div class="paCtxItem" onclick="applyAlign('center');paCloseDropdowns()">居中对齐</div>
+                                            <div class="paCtxItem" onclick="applyAlign('justify');paCloseDropdowns()">两端对齐</div>
+                                            <div class="paCtxItem" onclick="applyAlign('right');paCloseDropdowns()">右对齐</div>
+                                        </div>
+                                    </div>
+                                    <div class="paDropdownItem paCtxHasSub" data-submenu="ntStyle">
+                                        <span>样式</span><span class="paCtxArrow">▸</span>
+                                        <div class="paCtxSubmenu" data-submenu-for="ntStyle">
+                                            <div class="paCtxItem" onclick="applyNotepadStyle('bold');paCloseDropdowns()">加粗</div>
+                                            <div class="paCtxItem" onclick="applyNotepadStyle('italic');paCloseDropdowns()">斜体</div>
+                                            <div class="paCtxItem" onclick="applyNotepadStyle('underline');paCloseDropdowns()">下划线</div>
+                                            <div class="paCtxItem" onclick="applyNotepadStyle('strike');paCloseDropdowns()">删除线</div>
+                                            <div class="paCtxItem" onclick="applyNotepadStyle('normal');paCloseDropdowns()">正常</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="paDropdownWrap">
+                                <button class="paActionBtn paDropdownBtn" onclick="notepadToggleDropdown(event, 'para')">段落</button>
+                                <div class="paDropdownMenu" id="notepadParaMenu" style="left:auto;right:0;">
+                                    <div class="paDropdownItem" onclick="applyParagraphStyle('indent')">首行缩进</div>
+                                    <div class="paDropdownItem" onclick="cleanNotepadBlankLines()">清除空行</div>
+                                    <div class="paDropdownItem" onclick="cleanNotepadSpaces();paCloseDropdowns()">清除空格</div>
+                                    <div class="paDropdownItem" onclick="applyParagraphStyle('normal')">取消</div>
+                                </div>
+                            </div>
+                            <div class="paDropdownWrap" style="position:relative;">
+                                <button class="paActionBtn paDropdownBtn" onclick="notepadToggleDropdown(event, 'level')">层级</button>
+                                <div class="paDropdownMenu" id="notepadLevelMenu" style="left:auto;right:0;min-width:96px;">
+                                    <div class="paDropdownItem" onclick="applyNotepadLevel('level-index');paCloseDropdowns()">索引标题</div>
+                                    <div class="paDropdownItem" onclick="applyNotepadLevel('level-title');paCloseDropdowns()">文章标题</div>
+                                    <div class="paDropdownItem" onclick="applyNotepadLevel('level-date');paCloseDropdowns()">作者/日期</div>
+                                    <div class="paDropdownItem" onclick="applyNotepadLevel('level-recipient');paCloseDropdowns()">主送单位</div>
+                                    <div class="paDropdownItem" onclick="applyNotepadLevel('level-1');paCloseDropdowns()">一级标题</div>
+                                    <div class="paDropdownItem" onclick="applyNotepadLevel('level-2');paCloseDropdowns()">二级标题</div>
+                                    <div class="paDropdownItem" onclick="applyNotepadLevel('level-3');paCloseDropdowns()">三级标题</div>
+                                    <div class="paDropdownItem" onclick="applyNotepadLevel('level-body');paCloseDropdowns()">正文</div>
+                                    <div class="paDropdownItem" onclick="applyNotepadLevel('level-remark');paCloseDropdowns()">注释</div>
+                                    <div class="paDropdownItem" onclick="applyNotepadLevel('level-secret');paCloseDropdowns()">密级/附件</div>
+                                    <div class="paDropdownItem" onclick="applyNotepadLevel('level-attachment');paCloseDropdowns()">附件</div>
+                                    <hr style="margin:4px 8px;border:none;border-top:1px solid #e0e0e0;">
+                                    <div class="paDropdownItem" onclick="addNotepadDirEntry();paCloseDropdowns()">添加索引</div>
+                                </div>
+                            </div>
+                            <div class="paDropdownWrap">
+                                <button class="paActionBtn paDropdownBtn notepadFormatBtn" onclick="notepadToggleDropdown(event, 'format')">格式</button>
+                                <div class="paDropdownMenu" id="notepadFormatMenu" style="left:auto;right:0;">
+                                    <div class="paDropdownItem" onclick="npResetFormatVisible();paCloseDropdowns()">重置格式（全部）</div>
+                                    <div class="paDropdownItem" onclick="autoFormatDocSelected();paCloseDropdowns()">重置格式（选取部分）</div>
+                                    <div class="paDropdownItem paCtxHasSub" data-submenu="notepadFormatConvert">
+                                        <span>格式转换（本篇）</span><span class="paCtxArrow">▸</span>
+                                        <div class="paCtxSubmenu" data-submenu-for="notepadFormatConvert">
+                                            <div class="paCtxItem" onclick="convertNotepadArticleFormat('normal');paCloseDropdowns()">普通字号（待完善）</div>
+                                            <div class="paCtxItem" onclick="convertNotepadArticleFormat('large');paCloseDropdowns()">大字版（待完善）</div>
+                                        </div>
+                                    </div>
+                                    <hr style="margin:4px 8px;border:none;border-top:1px solid #e0e0e0;">
+                                    <div class="paDropdownItem" onclick="toggleAutoFormat();paCloseDropdowns()"><span id="notepadAutoFormatIcon">☐</span> 自动格式</div>
+                                </div>
+                            </div>
+                            <div class="paDropdownWrap">
+                                <button class="paActionBtn paDropdownBtn" onclick="notepadToggleDropdown(event, 'jump')">跳转</button>
+                                <div class="paDropdownMenu" id="notepadJumpMenu" style="left:auto;right:0;top:100%;">
+                                    <div class="paDropdownItem" onclick="notepadScrollToStart();paCloseDropdowns()">开始</div>
+                                    <div class="paDropdownItem" onclick="notepadScrollToNextHighlight();paCloseDropdowns()">下一高亮</div>
+                                    <div class="paDropdownItem" onclick="notepadScrollToPrevHighlight();paCloseDropdowns()">上一高亮</div>
+                                    <div class="paDropdownItem" onclick="notepadScrollToEnd();paCloseDropdowns()">末尾</div>
+                                </div>
+                            </div>
+                            <button class="paActionBtn" id="copyBtn">复制</button>
+                            <button class="paActionBtn" onclick="clearNotepad()">清空</button>
+                        </div>
+                        <button type="button" class="notepadToolbarScrollBtn" id="notepadToolbarScrollRight" onclick="scrollNotepadToolbar(1)" title="向右翻动">›</button>
+                    </div>
+                    <div class="npImportWrap" id="npImportWrap">
+                        <button type="button" class="npImportBtn" id="npImportBtn" onclick="npImportDocument()" title="导入 html / mht / js / doc / docx 到编辑区（会先清空）">导入</button>
+                    </div>
+                    <div class="saveDropdownWrap" id="notepadSaveDropdownWrap">
+                        <button class="notepadSaveBtn" id="notepadSaveBtn" onclick="npSaveCurrentNote(event)" title="保存当前笔记内容到 .js 文件">保存</button>
+                    </div>
+                    <div class="npExportWrap" id="npExportWrap">
+                        <button class="npExportBtn paDropdownBtn" id="npExportBtn" onclick="notepadToggleDropdown(event, 'export')" title="导出当前显示的文章">导出</button>
+                        <div class="paDropdownMenu npExportMenu" id="notepadExportMenu" style="left:auto;right:0;">
+                            <div class="paDropdownItem" data-npexport="docx" onclick="npExportSingle('docx-current')">导出 docx</div>
+                            <div class="paDropdownItem" data-npexport="js" onclick="npExportSingle('js-current')">导出 js</div>
+                            <div class="paDropdownItem" data-npexport="html" onclick="npExportSingle('html-current')">导出 html</div>
+                        </div>
+                    </div>
+                </div>
+                <hr style="border:none;border-top:1px solid #ddd;margin:0 0 6px 0;">
+                <div id="notepadEditor" class="notepadEditor bg0" contenteditable="true"></div>
+                <div class="notepadEditorZoomBar" id="notepadEditorZoomBar" style="display:none;">
+                    <button type="button" class="notepadEditorZoomBtn" title="放大" onclick="notepadZoomIn()"><img src="data/enlarge-1.ico" alt="放大"></button>
+                    <button type="button" class="notepadEditorZoomBtn" title="缩小" onclick="notepadZoomOut()"><img src="data/reduce-1.ico" alt="缩小"></button>
+                </div>
+                <button class="notepadEditorHideBtn" id="notepadEditorHideBtn" onclick="toggleNotepadToolbars()" title="显示工具栏">×</button>
+            </div>
+                <div class="npEditorStatus" id="npEditorStatus">
+                    <span class="npAutoFmtHint" id="notepadAutoFormatHint" style="display:none;">自动格式已打开</span>
+                </div>
+                </section>
+                <div class="npPrevResizer" id="npPrevResizer" title="拖动调整参考资料栏宽度"></div>
+                <section class="npPreviewPane" id="npPreviewPane" aria-hidden="true">
+                    <div class="npPaneHead npPrevHead">
+                        <div class="npDirTabs npPrevTabs" id="npPrevTabs">
+                            <button type="button" class="npDirTab active" data-prevmode="others">笔记</button>
+                            <button type="button" class="npDirTab" data-prevmode="files">本地</button>
+                            <button type="button" class="npDirTab" data-prevmode="attach">附件</button>
+                        </div>
+                        <div class="npPrevOps" id="npPrevOps">
+                            <div class="npPrevSearchWrap" id="npPrevSearchWrap">
+                                <input type="text" class="npPrevSearchInput" id="npPrevSearchInput"
+                                       placeholder="检索笔记：空格=或者，- =并且" autocomplete="off" spellcheck="false">
+                                <span class="npPrevTerms" id="npPrevTerms"></span>
+                                <button type="button" class="npPrevSearchBtn" id="npPrevSearchBtn" title="检索全部笔记">检索</button>
+                            </div>
+                            <div class="npPrevFolderSlots" id="npPrevFolderSlots"></div>
+                            <button type="button" class="npPrevAddBtn" id="npAttachAddBtn" title="添加附件">＋</button>
+                        </div>
+                        <button type="button" class="npPaneBtn npPaneBtnIcon" id="npPrevCloseBtn" title="收起预览栏">收起</button>
+                    </div>
+                    <div class="npPrevBody" id="npPrevBody">
+                        <div class="npPrevPane show" id="npPrevOthersPane">
+                            <div class="npPvSplit" id="npPvSplit">
+                                <div class="npPvResTree" id="npPvResTree"></div>
+                                <div class="npPrevDoc" id="npPrevDoc"></div>
+                            </div>
+                            <div class="npPrevLegendBar">
+                                <span class="npPrevHint" id="npPrevHint"></span>
+                                <span class="npPrevLegend" id="npPrevLegend"></span>
+                            </div>
+                        </div>
+                        <div class="npPrevPane" id="npPrevFilesPane">
+                            <div class="npFvPath" id="npFvPath" title="当前文件夹实际路径"></div>
+                            <div class="npFvBody" id="npFvBody">
+                                <div class="npFvTree" id="npFvTree"></div>
+                                <div class="npFvView" id="npFvView"></div>
+                            </div>
+                        </div>
+                        <div class="npPrevPane" id="npPrevAttachPane">
+                            <div class="npAttachTools">
+                                <span class="npAttachCount" id="npAttachCount">0 个附件</span>
+                                <button type="button" class="npAttachTool" data-attact="paste" title="点击后把剪贴板里的图片存为附件">粘入图片</button>
+                                <button type="button" class="npAttachTool" data-attact="image" title="从磁盘选择图片文件">选择图片</button>
+                                <button type="button" class="npAttachTool" data-attact="file">加文件</button>
+                                <button type="button" class="npAttachTool" data-attact="folder">加文件夹</button>
+                            </div>
+                            <div class="npAttachShotTip" id="npAttachShotTip"></div>
+                            <div class="npAttachStage">
+                                <div class="npAttachGrid" id="npAttachGrid"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section class="npMultiView" id="npMultiView" aria-hidden="true">
+                    <div class="npMvHead">
+                        <div class="npMvTabs" id="npMvTabs"></div>
+                        <span class="npMvCurTitle" id="npMvCurTitle"></span>
+                        <div class="npMvOps">
+                            <button type="button" class="npMvOpBtn" id="npMvPickBtn" title="给当前窗口选择一篇笔记">选择笔记</button>
+                            <button type="button" class="npMvOpBtn" id="npMvPickFileBtn" title="从本地硬盘选择文件，只读预览">选择文件</button>
+                            <button type="button" class="npMvOpBtn" id="npMvClearBtn" title="清空当前窗口关联的内容">清空</button>
+                            <button type="button" class="npMvOpBtn" id="npMvTileBtn" title="平铺 / 单窗切换">平铺</button>
+                            <button type="button" class="npMvOpBtn npMvClose" id="npMvCloseBtn" title="关闭多窗预览">×</button>
+                        </div>
+                    </div>
+                    <div class="npMvPicker" id="npMvPicker" hidden>
+                        <div class="npMvPickerHead">
+                            <span class="npMvPickerTitle" id="npMvPickerTitle">选择要放进窗口的笔记</span>
+                            <button type="button" class="npMvPickerBtn" id="npMvPickerClear" title="清空当前窗口">清空</button>
+                            <button type="button" class="npMvPickerBtn" id="npMvPickerClose" title="关闭">×</button>
+                        </div>
+                        <input type="text" class="npMvPickerInput" id="npMvPickerInput"
+                               placeholder="输入标题筛选…" autocomplete="off" spellcheck="false">
+                        <div class="npMvPickerList" id="npMvPickerList"></div>
+                    </div>
+                    <div class="npMvBody" id="npMvBody"></div>
+                </section>
+            </div>
+
+            <div class="npMvMemoMask" id="npMvMemoMask" hidden>
+                <div class="npMvMemoBox">
+                    <div class="npMvMemoHead">
+                        <span class="npMvMemoTitle" id="npMvMemoTitle">备注</span>
+                    </div>
+                    <textarea class="npMvMemoInput" id="npMvMemoInput" maxlength="200"
+                              placeholder="给这个窗口写一句备注（悬停页签时显示）"></textarea>
+                    <div class="npMvMemoBtns">
+                        <button type="button" class="npMvMemoBtn npMvMemoWarn" id="npMvMemoClear">清除</button>
+                        <span class="npMvMemoSpacer"></span>
+                        <button type="button" class="npMvMemoBtn" id="npMvMemoCancel">取消</button>
+                        <button type="button" class="npMvMemoBtn primary" id="npMvMemoSave">保存</button>
+                        <button type="button" class="npMvMemoBtn npMvMemoClose" id="npMvMemoClose" title="关闭">×</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="npAttachViewer" id="npAttachViewer">
+                        <div class="npAttachViewerBar">
+                            <span class="npAttachViewerName" id="npAttachViewerName"></span>
+                            <span class="npAttachViewerSpacer"></span>
+                            <button type="button" class="npAttachViewerBtn" id="npAttachViewerPrev" title="上一张">上一张</button>
+                            <button type="button" class="npAttachViewerBtn" id="npAttachViewerNext" title="下一张">下一张</button>
+                            <button type="button" class="npAttachViewerBtn" id="npAttachFullBtn" title="全屏显示">全屏</button>
+                            <button type="button" class="npAttachViewerBtn npAttachViewerClose" id="npAttachViewerClose" title="关闭预览">×</button>
+                        </div>
+                        <div class="npAttachViewerStage" id="npAttachViewerStage">
+                            <img id="npAttachViewerImg" alt="" draggable="false">
+                            <div class="npAttachDocBody" id="npAttachDocBody" hidden></div>
+                        </div>
+                        <div class="npAttachViewerFoot" id="npAttachViewerFoot">
+                            <div class="npViewerFindWrap">
+                                <input type="text" class="npViewerFindInput" id="npViewerFindInput"
+                                       placeholder="在预览中检索：空格=或者，- =并且" autocomplete="off" spellcheck="false">
+                                <span class="npViewerFindCount" id="npViewerFindCount"></span>
+                            </div>
+                            <span class="npAttachViewerSpacer"></span>
+                            <button type="button" class="npAttachViewerBtn" id="npAttachOpenNative" title="用系统默认程序打开这个文件">默认程序打开</button>
+                            <div class="npAttachZoom" id="npAttachZoom" hidden>
+                                <button type="button" class="npAttachViewerBtn" id="npAttachZoomOut" title="缩小">−</button>
+                                <button type="button" class="npAttachViewerBtn npAttachZoomLabel" id="npAttachZoomLabel" title="恢复 100%">100%</button>
+                                <button type="button" class="npAttachViewerBtn" id="npAttachZoomIn" title="放大">+</button>
+                            </div>
+                        </div>
+                    </div>
+        </div>
+
+<!-- ===== 源 电子记事本.html 358-358 ===== -->
+        <input type="file" id="notepadOpenInput" accept=".js,.txt" onchange="loadNotepadFile(event)">
+
+<!-- ===== 源 电子记事本.html 359-448 ===== -->
+        <div id="tileContainer"></div>
+        <div id="materialAssistPanel">
+            <div class="materialAssistTabs">
+                <button class="materialAssistTab active" data-mtab="outline" onclick="switchMaterialAssistTab('outline')">提纲</button>
+                <button class="materialAssistTab" data-mtab="mirror" onclick="switchMaterialAssistTab('mirror')">镜像</button>
+                <button class="materialAssistTab" data-mtab="whiteboard" onclick="switchMaterialAssistTab('whiteboard')">白板</button>
+                 <div class="paDropdownWrap materialNoteWrap">
+                     <div class="materialNoteSplit"><button class="materialNoteMain" data-mtab="note" onclick="switchMaterialAssistTab('note')">其他窗口</button><button class="materialNoteArrow" type="button" onclick="toggleMaterialNoteMenu(event)" title="选择文稿窗口">▼</button></div>
+                     <div class="paDropdownMenu" id="materialNoteMenu" style="left:0;top:100%;min-width:110px;"></div>
+                </div>
+                <span class="materialAssistSearchArea">
+                    <button class="notepadSearchBtn" id="materialSearchBtn" onclick="toggleMaterialSearch(event)" title="检索">🔍</button>
+                </span>
+                <button class="materialAssistCloseBtn" onclick="exitMaterialToDefaultNotepad()" title="退出写材料模式">×</button>
+            </div>
+            <div class="materialAssistBody" id="materialAssistBody">
+                <div class="materialAssistPane show" id="materialOutlinePane"><ul id="materialOutlineList"></ul></div>
+                <div class="materialAssistPane" id="materialMirrorPane"><div id="materialMirrorView" contenteditable="false"></div></div>
+                <div class="materialAssistPane" id="materialWhiteboardPane"><textarea id="materialWhiteboard" placeholder="临时粘贴内容到这里，自动暂存到本机缓存，不写入日志js文件。"></textarea><div id="materialWhiteboardSearchView"></div></div>
+                <div class="materialAssistPane" id="materialNotePane"><div id="materialNoteView"></div></div>
+            </div>
+            <div class="materialAssistBottomBtns"><button class="materialAssistZoomBtn" onclick="materialAssistZoomIn()">放大</button><button class="materialAssistZoomBtn" onclick="materialOutlineAutoRenumber()">序号</button><button class="materialAssistZoomBtn" onclick="materialAssistRefresh()">刷新</button><button class="materialAssistZoomBtn" onclick="materialAssistZoomOut()">缩小</button></div>
+            <div class="materialAssistResizeRight"></div>
+            <div class="materialAssistResizeBottom"></div>
+            <div class="materialAssistResizeHandle"></div>
+        </div>
+        <div class="materialAssistSearchWrap" id="materialSearchWrap" style="display:none;">
+            <div class="materialSearchHead" id="materialSearchDragHandle">
+                <span class="materialSearchHeadText">检索</span>
+                <button type="button" class="materialSearchClose" onclick="closeMaterialSearch()">×</button>
+            </div>
+            <div class="materialSearchBody">
+                <input type="text" id="materialSearchInput" class="materialSearchInput" placeholder="多个关键字用空格隔开">
+                <span id="materialSearchCount" class="notepadSearchCount"></span>
+                <div class="notepadSearchNav" id="materialSearchNav">
+                    <button type="button" onclick="materialSearchPrev()" title="上一条">▲</button>
+                    <button type="button" onclick="materialSearchNext()" title="下一条">▼</button>
+                </div>
+                <label class="notepadSearchFilter"><input type="checkbox" id="materialSearchFilter"> 仅匹配</label>
+            </div>
+        </div>
+        <div class="notepadSearchWrap" id="notepadSearchWrap" style="display:none;">
+            <span class="notepadSearchGrip" id="notepadSearchGrip" title="拖动移动检索框"></span>
+            <div class="notepadSearchBody">
+                <input type="text" id="notepadSearchInput" class="notepadSearchInput" placeholder="多个关键字用空格隔开">
+                <span id="notepadSearchCount" class="notepadSearchCount"></span>
+                <div class="notepadSearchNav" id="notepadSearchNav">
+                    <button type="button" onclick="notepadSearchPrev()" title="上一条">▲</button>
+                    <button type="button" onclick="notepadSearchNext()" title="下一条">▼</button>
+                </div>
+                <label class="notepadSearchFilter"><input type="checkbox" id="notepadSearchFilter"> 仅匹配</label>
+                <button type="button" class="notepadSearchClose" onclick="closeNotepadSearch()" title="关闭检索" aria-label="关闭检索">✕</button>
+            </div>
+        </div>
+         <div class="notepadOutlineModal" id="notepadOutlineModal">
+            <div class="notepadOutlineModalContent" id="notepadOutlineModalContent">
+                <button class="closeOutlineBtn" onclick="closeNotepadOutlineModal()">×</button>
+                <div class="notepadOutlineTabs">
+                    <button class="notepadOutlineTab active" data-otab="dir" onclick="switchOutlineTab('dir')">文稿列表</button>
+                    <button class="notepadOutlineTab" data-otab="struct" onclick="switchOutlineTab('struct')">文稿提纲</button>
+                </div>
+                <div class="notepadOutlineTabContent show" id="notepadOutlineDirTab"></div>
+                <div class="notepadOutlineTabContent" id="notepadOutlineStructTab">
+                    <ul id="notepadOutlineList"></ul>
+                </div>
+                <div class="notepadOutlineModalBtns" id="notepadOutlineModalBtns">
+                    <span style="flex:1;display:flex;gap:4px;flex-wrap:wrap;align-items:center;justify-content:center;">
+                        <button class="notepadBtn scroll" id="notepadOutlineRefreshBtn" onclick="refreshNotepadOutlineModal()">刷新</button>
+                        <button class="notepadBtn scroll" onclick="notepadOutlineToggleOrder()" id="notepadOutlineOrderBtn" style="display:none;">顺序</button>
+                        <button class="notepadBtn scroll" onclick="notepadOutlineToggleExpand()" id="notepadOutlineExpandBtn" style="display:none;">展开</button>
+                    </span>
+                    <span style="display:flex;gap:4px;align-items:center;flex-shrink:0;">
+                        <button class="notepadOutlineZoomBtn" onclick="notepadOutlineZoomIn()" title="放大">＋</button>
+                        <button class="notepadOutlineZoomBtn" onclick="notepadOutlineZoomOut()" title="缩小">－</button>
+                    </span>
+                </div>
+                <div class="notepadOutlineResizeRight"></div>
+                <div class="notepadOutlineResizeBottom"></div>
+                <div class="notepadOutlineResizeHandle"></div>
+            </div>
+        </div>
+        <input type="file" id="filePickerInput" accept=".js" style="display:none">
+        <input type="file" id="openFileInput" accept=".js" style="display:none" onchange="loadDataFile(event)">
+        <input type="file" id="scanFolderInput" webkitdirectory style="display:none">
+        <input type="file" id="paOpenFolderInput" webkitdirectory style="display:none">
+        <input type="file" id="paSaveFolderInput" webkitdirectory style="display:none">
+        <input type="file" id="notepadOpenFileInput" accept=".html,.htm,.mht,.js" style="display:none" onchange="onNotepadOpenFileSelected(event)">
+        <input type="file" id="npImportFileInput" accept=".html,.htm,.mht,.mhtml,.js,.doc,.docx" style="display:none" onchange="onNpImportFileSelected(event)">
+        <input type="file" id="notepadImportFolderInput" webkitdirectory style="display:none;opacity:0;position:fixed;top:0;left:0;width:1px;height:1px;" onchange="onNotepadImportFolderSelected(event)">
+
+<!-- ===== 源 电子记事本.html 450-454 ===== -->
+        <div id="mainSplitDivider"></div>
+         <div id="rightPanel">
+             <div id="trackContent"></div>
+         </div>
+        <div id="notepadDockLayer"></div>
+
+
+    
+<!-- ===== 源 电子记事本.html 1522-1524 ===== -->
+    <script type="text/xml" id="docxTemplate"><?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?mso-application progid="Word.Document"?>
+<w:wordDocument xmlns:w="http://schemas.microsoft.com/office/word/2003/wordml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:sl="http://schemas.microsoft.com/schemaLibrary/2003/core"  xmlns:aml="http://schemas.microsoft.com/aml/2001/core" xmlns:wx="http://schemas.microsoft.com/office/word/2003/auxHint" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:dt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882" w:macrosPresent="no" w:embeddedObjPresent="no" w:ocxPresent="no" xml:space="preserve" xmlns:wpsCustomData="http://www.wps.cn/officeDocument/2013/wpsCustomData"><o:DocumentProperties><o:Author>admin</o:Author><o:LastAuthor>周</o:LastAuthor><o:LastPrinted>2022-09-22T12:48:00Z</o:LastPrinted><o:Created>2022-09-13T07:59:00Z</o:Created><o:LastSaved>2026-05-09T10:24:36Z</o:LastSaved><o:TotalTime>8640</o:TotalTime><o:Pages>1</o:Pages><o:Words>43</o:Words><o:Characters>43</o:Characters><o:Lines>0</o:Lines><o:Paragraphs>0</o:Paragraphs><o:CharactersWithSpaces>43</o:CharactersWithSpaces><o:Version>14</o:Version></o:DocumentProperties><o:CustomDocumentProperties><o:KSOProductBuildVer dt:dt="string">2052-12.1.0.25860</o:KSOProductBuildVer><o:KSOTemplateDocerSaveRecord dt:dt="string">eyJoZGlkIjoiMjcxOGZjNzJjMWE2MmFjNGJjZmQ2Nzg5MzA4MjAzNjUifQ==</o:KSOTemplateDocerSaveRecord><o:ICV dt:dt="string">3D67B906955542AEB3FE849513433A7C_13</o:ICV></o:CustomDocumentProperties><w:fonts><w:defaultFonts w:ascii="Calibri" w:fareast="宋体" w:h-ansi="Calibri" w:cs="Times New Roman"/><w:font w:name="Times New Roman"><w:panose-1 w:val="02020603050405020304"/><w:charset w:val="88"/><w:family w:val="Roman"/><w:pitch w:val="Default"/><w:sig w:usb-0="E0002EFF" w:usb-1="C000785B" w:usb-2="00000009" w:usb-3="00000000" w:csb-0="400001FF" w:csb-1="FFFF0000"/></w:font><w:font w:name="宋体"><w:panose-1 w:val="02010600030101010101"/><w:charset w:val="86"/><w:family w:val="Auto"/><w:pitch w:val="Default"/><w:sig w:usb-0="00000203" w:usb-1="288F0000" w:usb-2="00000006" w:usb-3="00000000" w:csb-0="00040001" w:csb-1="00000000"/></w:font><w:font w:name="Wingdings"><w:panose-1 w:val="05000000000000000000"/><w:charset w:val="02"/><w:family w:val="Auto"/><w:pitch w:val="Default"/><w:sig w:usb-0="00000000" w:usb-1="00000000" w:usb-2="00000000" w:usb-3="00000000" w:csb-0="80000000" w:csb-1="00000000"/></w:font><w:font w:name="Arial"><w:panose-1 w:val="020B0604020202020204"/><w:charset w:val="01"/><w:family w:val="SWiss"/><w:pitch w:val="Default"/><w:sig w:usb-0="E0002EFF" w:usb-1="C000785B" w:usb-2="00000009" w:usb-3="00000000" w:csb-0="400001FF" w:csb-1="FFFF0000"/></w:font><w:font w:name="黑体"><w:panose-1 w:val="02010609060101010101"/><w:charset w:val="86"/><w:family w:val="Auto"/><w:pitch w:val="Default"/><w:sig w:usb-0="800002BF" w:usb-1="38CF7CFA" w:usb-2="00000016" w:usb-3="00000000" w:csb-0="00040001" w:csb-1="00000000"/></w:font><w:font w:name="Courier New"><w:panose-1 w:val="02070309020205020404"/><w:charset w:val="01"/><w:family w:val="Modern"/><w:pitch w:val="Default"/><w:sig w:usb-0="E0002EFF" w:usb-1="C0007843" w:usb-2="00000009" w:usb-3="00000000" w:csb-0="400001FF" w:csb-1="FFFF0000"/></w:font><w:font w:name="Symbol"><w:panose-1 w:val="05050102010706020507"/><w:charset w:val="02"/><w:family w:val="Roman"/><w:pitch w:val="Default"/><w:sig w:usb-0="00000000" w:usb-1="00000000" w:usb-2="00000000" w:usb-3="00000000" w:csb-0="80000000" w:csb-1="00000000"/></w:font><w:font w:name="Calibri"><w:panose-1 w:val="020F0502020204030204"/><w:charset w:val="00"/><w:family w:val="SWiss"/><w:pitch w:val="Default"/><w:sig w:usb-0="E4002EFF" w:usb-1="C200247B" w:usb-2="00000009" w:usb-3="00000000" w:csb-0="200001FF" w:csb-1="00000000"/></w:font><w:font w:name="仿宋_GB2312"><w:panose-1 w:val="02010609030101010101"/><w:charset w:val="86"/><w:family w:val="Modern"/><w:pitch w:val="Default"/><w:sig w:usb-0="00000001" w:usb-1="080E0000" w:usb-2="00000000" w:usb-3="00000000" w:csb-0="00040000" w:csb-1="00000000"/></w:font><w:font w:name="方正小标宋简体"><w:panose-1 w:val="02010601030101010101"/><w:charset w:val="86"/><w:family w:val="Auto"/><w:pitch w:val="Default"/><w:sig w:usb-0="00000001" w:usb-1="080E0000" w:usb-2="00000000" w:usb-3="00000000" w:csb-0="00040000" w:csb-1="00000000"/></w:font><w:font w:name="楷体_GB2312"><w:panose-1 w:val="02010609030101010101"/><w:charset w:val="86"/><w:family w:val="Modern"/><w:pitch w:val="Default"/><w:sig w:usb-0="00000001" w:usb-1="080E0000" w:usb-2="00000000" w:usb-3="00000000" w:csb-0="00040000" w:csb-1="00000000"/></w:font></w:fonts><w:styles><w:style w:type="paragraph" w:styleId="a1" w:default="on"><w:name w:val="Normal"/><w:pPr><w:widowControl w:val="off"/><w:jc w:val="both"/></w:pPr><w:rPr><w:rFonts w:ascii="Times New Roman" w:h-ansi="Times New Roman" w:fareast="仿宋_GB2312" w:cs="Times New Roman" w:hint="default"/><w:kern w:val="2"/><w:sz w:val="32"/><w:sz-cs w:val="24"/><w:lang w:val="EN-US" w:fareast="ZH-CN" w:bidi="AR-SA"/></w:rPr></w:style><w:style w:type="character" w:styleId="a5" w:default="on"><w:name w:val="Default Paragraph Font"/><w:semiHidden/></w:style><w:style w:type="table" w:styleId="a4" w:default="on"><w:name w:val="Normal Table"/><w:semiHidden/><w:tblPr><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style><w:style w:type="paragraph" w:styleId="a2"><w:name w:val="footer"/><w:basedOn w:val="a1"/><w:pPr><w:tabs><w:tab w:val="center" w:pos="4153"/><w:tab w:val="right" w:pos="8306"/></w:tabs><w:snapToGrid w:val="off"/><w:jc w:val="left"/></w:pPr><w:rPr><w:rFonts w:ascii="宋体" w:h-ansi="宋体" w:fareast="宋体" w:cs="宋体" w:hint="default"/><w:sz w:val="28"/><w:sz-cs w:val="28"/></w:rPr></w:style><w:style w:type="paragraph" w:styleId="a3"><w:name w:val="header"/><w:basedOn w:val="a1"/><w:pPr><w:pBdr><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/></w:pBdr><w:tabs><w:tab w:val="center" w:pos="4153"/><w:tab w:val="right" w:pos="8306"/></w:tabs><w:snapToGrid w:val="off"/><w:spacing w:line="240" w:line-rule="auto"/><w:jc w:val="both"/><w:outlineLvl w:val="9"/></w:pPr><w:rPr><w:sz w:val="18"/></w:rPr></w:style></w:styles><w:bgPict><w:background/><v:background id="_x0000_s1025"><v:fill on="f" focussize="0,0"/></v:background></w:bgPict><w:docPr><w:view w:val="print"/><w:zoom w:percent="120"/><w:characterSpacingControl w:val="CompressPunctuation"/><w:documentProtection w:enforcement="off"/><w:punctuationKerning/><w:bordersDontSurroundHeader/><w:bordersDontSurroundFooter/><w:defaultTabStop w:val="420"/><w:drawingGridVerticalSpacing w:val="156"/><w:displayHorizontalDrawingGridEvery w:val="0"/><w:displayVerticalDrawingGridEvery w:val="2"/><w:evenAndOddHeaders w:val="1"/><w:compat><w:adjustLineHeightInTable/><w:ulTrailSpace/><w:doNotExpandShiftReturn/><w:balanceSingleByteDoubleByteWidth/><w:useFELayout/><w:spaceForUL/><w:wrapTextWithPunct/><w:breakWrappedTables/><w:useAsianBreakRules/><w:dontGrowAutofit/><w:useFELayout/></w:compat></w:docPr><w:body><wx:sect>__DOC_BODY__<w:sectPr><w:ftr w:type="even"><w:p><w:pPr><w:pStyle w:val="a2"/><w:ind w:first-line="280" w:first-line-chars="100"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="宋体" w:h-ansi="宋体" w:fareast="宋体" w:cs="宋体" w:hint="fareast"/><w:sz w:val="28"/><w:sz-cs w:val="28"/><w:lang w:fareast="ZH-CN"/></w:rPr><w:t>— </w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText> PAGE </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:rFonts w:ascii="宋体" w:h-ansi="宋体" w:fareast="宋体" w:cs="宋体" w:hint="fareast"/><w:sz w:val="28"/><w:sz-cs w:val="28"/><w:lang w:fareast="ZH-CN"/></w:rPr><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r><w:r><w:rPr><w:rFonts w:ascii="宋体" w:h-ansi="宋体" w:fareast="宋体" w:cs="宋体" w:hint="fareast"/><w:sz w:val="28"/><w:sz-cs w:val="28"/><w:lang w:val="EN-US" w:fareast="ZH-CN"/></w:rPr><w:t> —</w:t></w:r></w:p></w:ftr><w:ftr w:type="odd"><w:p><w:pPr><w:pStyle w:val="a2"/><w:tabs><w:tab w:val="center" w:pos="4153"/><w:tab w:val="right" w:pos="8306"/></w:tabs><w:wordWrap w:val="off"/><w:jc w:val="right"/><w:rPr><w:rFonts w:ascii="宋体" w:h-ansi="宋体" w:fareast="宋体" w:cs="宋体" w:hint="default"/><w:sz w:val="28"/><w:sz-cs w:val="28"/><w:lang w:val="EN-US"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii="宋体" w:h-ansi="宋体" w:fareast="宋体" w:cs="宋体" w:hint="fareast"/><w:sz w:val="28"/><w:sz-cs w:val="28"/><w:lang w:fareast="ZH-CN"/></w:rPr><w:t>— </w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText> PAGE </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:rFonts w:ascii="宋体" w:h-ansi="宋体" w:fareast="宋体" w:cs="宋体" w:hint="fareast"/><w:sz w:val="28"/><w:sz-cs w:val="28"/><w:lang w:fareast="ZH-CN"/></w:rPr><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r><w:r><w:rPr><w:rFonts w:ascii="宋体" w:h-ansi="宋体" w:fareast="宋体" w:cs="宋体" w:hint="fareast"/><w:sz w:val="28"/><w:sz-cs w:val="28"/><w:lang w:val="EN-US" w:fareast="ZH-CN"/></w:rPr><w:t> —</w:t></w:r><w:r><w:rPr><w:rFonts w:cs="宋体" w:hint="fareast"/><w:sz w:val="28"/><w:sz-cs w:val="28"/><w:lang w:val="EN-US" w:fareast="ZH-CN"/></w:rPr><w:t xml:space="preserve">  </w:t></w:r></w:p></w:ftr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="2098" w:right="1474" w:bottom="1984" w:left="1587" w:header="1417" w:footer="1531" w:gutter="0"/><w:paperSrc w:first="0" w:other="0"/><w:cols w:space="0"/><w:docGrid w:type="lines" w:line-pitch="312"/></w:sectPr></wx:sect></w:body></w:wordDocument></script>
+
+﻿    <div class="fileSelectorModal" id="notepadOpenModal">
+        <div class="fileSelectorBox" style="width:750px;max-width:95vw;">
+            <div class="fileSelectorTitle">导入笔记内容</div>
+            <div id="notepadOpenModalFolderBar" style="padding:6px 10px;font-size:12px;color:#666;display:none;align-items:center;gap:6px;">
+                <img src="data/open.ico" style="width:16px;height:16px;">
+                <span id="notepadOpenModalFolderText"></span>
+                <select id="notepadOpenSubfolderSelect" style="font-size:12px;padding:2px 4px;max-width:150px;display:none;margin-left:20px;"></select>
+                <div style="flex:1;"></div>
+                <button id="notepadOpenSelectDirBtn" onclick="changeNotepadOpenRootFolder()" style="padding:2px 8px;font-size:11px;border:1px solid #ccc;border-radius:3px;background:#f5f5f5;cursor:pointer;white-space:nowrap;">更改目录</button>
+                <button id="notepadOpenRefreshBtn" onclick="refreshNotepadOpenList()" style="padding:2px 8px;font-size:11px;border:1px solid #ccc;border-radius:3px;background:#f5f5f5;cursor:pointer;white-space:nowrap;">刷新列表</button>
+            </div>
+            <div style="display:flex;flex:1;min-height:0;border:1px solid #e0e0e0;border-radius:4px;overflow:hidden;">
+                <div style="flex:1;overflow-y:auto;">
+                    <table class="fileSelectorTable">
+                        <thead><tr><th style="width:40px;white-space:nowrap;">序号</th><th>文件名</th><th style="width:60px">勾选</th></tr></thead>
+                        <tbody id="notepadOpenModalBody"></tbody>
+                    </table>
+                    <div id="notepadOpenModalEmpty" class="fileSelectorEmpty">未找到 .html .htm .mht .js 文件</div>
+                </div>
+            </div>
+            <div class="fileSelectorBtns">
+                <button class="editModalBtn save" onclick="confirmNotepadOpen()">确定</button>
+                <button class="editModalBtn" onclick="document.getElementById('notepadOpenFileInput').click()" style="background:#3498db;color:#fff;">打开其他文件</button>
+                <button class="editModalBtn cancel" onclick="closeNotepadOpenModal()">取消</button>
+            </div>
+        </div>
+    </div>
+    <div class="npRenameModal" id="notepadRenameModal" onclick="if(event.target===this)closeNotepadRename()">
+        <div class="npRenameBox">
+            <div class="npRenameHead"><span class="npRenameHeadText">修改标题</span></div>
+            <input type="text" class="npRenameInput" id="notepadRenameInput" placeholder="请输入标题" onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();confirmNotepadRename();}else if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeNotepadRename();}">
+            <div class="npRenameBtns">
+                <button type="button" class="npReplaceRunBtn" id="notepadRenameOk" onclick="confirmNotepadRename()">确定</button>
+                <button type="button" class="npReplaceCancelBtn" onclick="closeNotepadRename()">取消</button>
+            </div>
+        </div>
+    </div>
+
+
+</main>
+
+<footer id="mainFooter">
+  <span class="paFooterLeftBar"><span class="paShortcutBtn" onclick="paShowShortcutDialog()">快捷键</span></span>
+  <span class="paFooterLeft">周冉制作　20261102更新</span>
+  <span class="paFooterRight">
+    <span id="footerTimestamp"></span>
+    <span class="npBridgePill checking" id="npBridgePill" role="status" title="正在检测本机服务…">
+      <span class="npBridgeDot"></span><span id="npBridgeText">检测中</span>
+    </span>
+    <button type="button" class="npBridgeRetry" id="npBridgeRetry" title="重新检测「致知办公助手」本机服务">重试</button>
+  </span>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/store.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/format-standard.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/notepad-search-core.js"></script>
+<script src="js/notepad.js"></script>
+<script src="js/notepad-io.js"></script>
+<script src="js/notepad-import.js"></script>
+<script src="js/notepad-folder.js"></script>
+<script src="js/notepad-workspace.js"></script>
+<script src="js/notepad-filetree.js"></script>
+<script src="js/npf-docview.js"></script>
+<script src="js/npf-doc.js"></script>
+<script src="js/vendor/pdf.min.js"></script>
+<script src="js/notepad-pdf.js"></script>
+<script src="js/notepad-preview.js"></script>
+<script src="js/notepad-attach.js"></script>
+<script src="js/notepad-prevsearch.js"></script>
+<script src="js/notepad-multiview.js"></script>
+<script src="js/notepad-export-btn.js"></script>
+<script src="js/notepad-image.js"></script>
+<script src="js/notepad-ctxmenu.js"></script>
+<script src="js/legacy-stubs.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

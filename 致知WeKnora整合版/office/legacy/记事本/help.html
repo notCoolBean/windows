@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>电子记事本使用手册</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Microsoft YaHei", "微软雅黑", SimSun, "宋体", sans-serif;
+    color: #333;
+    background: #f5f7fa;
+    line-height: 1.8;
+}
+.wrapper {
+    max-width: min(90%, 1200px);
+    margin: 0 auto;
+    background: #fff;
+    min-height: 100vh;
+}
+.header {
+    background: linear-gradient(135deg, #0d2b4e, #1a4a7a);
+    color: #fff;
+    padding: 40px 5% 30px;
+}
+.header h1 {
+    margin: 0 0 8px;
+    font-size: clamp(22px, 3vw, 32px);
+    font-weight: normal;
+    letter-spacing: 2px;
+}
+.header .subtitle {
+    font-size: clamp(13px, 1.5vw, 15px);
+    color: rgba(255,255,255,0.7);
+}
+.content {
+    padding: 30px 5% 60px;
+}
+h2 {
+    font-size: 22px;
+    color: #0d2b4e;
+    border-bottom: 2px solid #e3f2fd;
+    padding-bottom: 8px;
+    margin: 40px 0 20px;
+}
+h2:first-child { margin-top: 0; }
+h3 {
+    font-size: 17px;
+    color: #1a4a7a;
+    margin: 28px 0 12px;
+}
+p { margin: 10px 0; }
+ul, ol { padding-left: 24px; margin: 10px 0; }
+li { margin: 4px 0; }
+strong { color: #0d2b4e; }
+a { color: #1565c0; text-decoration: none; }
+a:hover { text-decoration: underline; }
+hr {
+    border: none;
+    border-top: 1px solid #e8ecf1;
+    margin: 30px 0;
+}
+code {
+    background: #f0f4f8;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 14px;
+    color: #c7254e;
+}
+blockquote {
+    margin: 14px 0;
+    padding: 12px 18px;
+    background: #fff8e1;
+    border-left: 4px solid #ffb300;
+    color: #5d4037;
+    border-radius: 0 4px 4px 0;
+}
+blockquote p { margin: 4px 0; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+}
+th, td {
+    border: 1px solid #d9e1ea;
+    padding: 10px 14px;
+    text-align: left;
+}
+th {
+    background: #f0f4f8;
+    color: #0d2b4e;
+    font-weight: normal;
+}
+td { background: #fff; }
+.toc {
+    background: #f8fafc;
+    border: 1px solid #e3e8ef;
+    border-radius: 6px;
+    padding: 20px 5% 20px 28px;
+    margin: 20px 0 30px;
+}
+.toc h3 {
+    margin: 0 0 12px;
+    font-size: 16px;
+    color: #0d2b4e;
+}
+.toc ol { margin: 0; padding-left: 20px; }
+.toc li { margin: 6px 0; }
+.toc a { color: #1565c0; }
+.footer {
+    text-align: center;
+    padding: 20px 5%;
+    color: #999;
+    font-size: 13px;
+    border-top: 1px solid #e8ecf1;
+}
+@media print {
+    body { background: #fff; }
+    .wrapper { max-width: 100%; }
+    .header { background: #0d2b4e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    h2 { break-after: avoid; }
+}
+@media (max-width: 640px) {
+    .header { padding: 24px 4% 18px; }
+    .content { padding: 20px 4% 40px; }
+    .footer { padding: 16px 4%; }
+    table { font-size: 13px; }
+    th, td { padding: 8px 10px; }
+}
+@media (min-width: 1600px) {
+    .wrapper { max-width: 75%; }
+    .content { padding: 36px 6% 60px; }
+    h2 { font-size: 24px; }
+    h3 { font-size: 18px; }
+    body { font-size: 16px; }
+}
+</style>
+<script src="../bridge-session.js"></script>
+</head>
+<body>
+<div class="wrapper">
+
+<div class="header">
+    <h1>电子记事本使用手册</h1>
+    <div class="subtitle">综合性办公辅助工具 &mdash; 功能说明与操作指南</div>
+</div>
+
+<div class="content">
+
+<div class="toc">
+<h3>目录</h3>
+<ol>
+    <li><a href="#sec1">程序简介</a></li>
+    <li><a href="#sec2">启动与登录</a></li>
+    <li><a href="#sec3">界面布局</a></li>
+    <li><a href="#sec4">日历功能</a></li>
+    <li><a href="#sec5">备忘与随记</a></li>
+    <li><a href="#sec6">工作日志</a></li>
+    <li><a href="#sec7">通讯录</a></li>
+    <li><a href="#sec8">计时与闹钟</a></li>
+    <li><a href="#sec9">数据保存与管理</a></li>
+    <li><a href="#sec10">快捷键参考</a></li>
+    <li><a href="#sec11">常见问题</a></li>
+</ol>
+</div>
+
+<h2 id="sec1">一、程序简介</h2>
+
+<p>电子记事本是一款基于 HTML + JavaScript 开发的综合性办公辅助工具，集成了日历、备忘、随记、工作日志、通讯录、计时闹钟和文档导出等功能模块。程序无需安装，直接用浏览器打开即可使用，所有数据可随文件夹一起存储在 U 盘中，实现真正的便携办公。</p>
+
+<p>程序采用多模块架构，主页面 <code>电子记事本.html</code> 负责界面结构，各功能由独立的 JavaScript 模块文件提供。数据采用两层保存机制：浏览器缓存自动保存 + 文件手动持久保存，兼顾便捷与安全。</p>
+
+<hr>
+
+<h2 id="sec2">二、启动与登录</h2>
+
+<h3>启动方式</h3>
+<p>双击 <code>电子记事本.html</code> 文件，程序将在默认浏览器中打开。建议使用 Chrome 或 Edge 浏览器以获得最佳体验，部分文件操作功能依赖现代浏览器接口。</p>
+
+<h3>用户登录</h3>
+<p>程序内置简单的用户登录功能，用于保护个人数据。</p>
+
+<p><strong>首次使用</strong>：打开程序后会显示注册界面，需要设置用户名和密码。注册完成后即可登录。</p>
+
+<p><strong>后续登录</strong>：输入用户名和密码即可登录。如果勾选了"下次自动登录"，下次打开程序时将自动登录，无需手动输入密码。</p>
+
+<p><strong>退出登录</strong>：点击底部状态栏的"退出登录"按钮（前面带橙色小图标），程序会回到登录界面。下次打开需要重新输入密码。</p>
+
+<p><strong>登录信息保存</strong>：登录账号和密码保存在浏览器的 localStorage 中。只要不清除浏览器数据，登录信息会一直保留。</p>
+
+<blockquote>
+<p><strong>注意</strong>：如果勾选了"下次自动登录"，程序会在打开时自动登录并直接进入主界面，跳过登录页面。退出登录后，自动登录会被取消。</p>
+</blockquote>
+
+<hr>
+
+<h2 id="sec3">三、界面布局</h2>
+
+<p>程序界面分为以下几个区域：</p>
+
+<p><strong>顶部工具栏</strong>：左侧为程序名称（图标为记事本图标，浏览器标签页用的是同一个图标）和功能按钮——文件夹图标（打开"数据文件"窗口）、保存图标（下拉选择保存到缓存 / 保存数据 / 另存为，双击即保存到缓存）、日历、通讯录、放大、缩小；点击左侧程序 logo 可进入/退出全屏。右侧为时间范围选择器、导航箭头、搜索框、视图切换按钮和添加条目按钮。</p>
+
+<p><strong>左侧面板</strong>：包含日历、备忘/随记三个功能区。日历在顶部，下方通过"备忘"和"随记"两个标签页切换。</p>
+
+<p><strong>右侧主区域</strong>：显示工作日志（表格/页面/多维态势图三种视图）或通讯录。</p>
+
+<p><strong>浮动面板</strong>：周工作总结编辑器为独立浮动窗口，可拖动标题栏移动、拖右下角调整大小，不遮挡下方页面操作。</p>
+
+<p><strong>底部状态栏</strong>：从左到右依次为——当前数据文件名、"清空数据"按钮、"退出登录"按钮、"使用帮助"链接，每个按钮前都有一个彩色小图标（清空数据为红色、退出登录为橙色、使用帮助为绿色）；中间显示"周冉 制作"，最右侧是版本更新时间戳。</p>
+
+<hr>
+
+<h2 id="sec4">四、日历功能</h2>
+
+<h3>基本操作</h3>
+<ul>
+    <li><strong>查看月份</strong>：左侧面板顶部显示当前月份的日历网格</li>
+    <li><strong>切换月份</strong>：点击日历上方的 <code>&lt;</code> 和 <code>&gt;</code> 箭头切换月份，点击"当前"回到本月</li>
+    <li><strong>选择日期</strong>：点击任意日期，该日期高亮显示，备忘区随之显示当天的备忘；右上角的日志时间范围（日志/周工作/月工作等）保持不变，不会因为点日期而被切成"日志"日视图</li>
+</ul>
+
+<h3>农历与节日</h3>
+<p>日历自动显示对应的农历日期。中国传统节日和公历节日会以不同颜色标注。</p>
+
+<h3>快速添加日志</h3>
+<p>每个日期单元格上有一个"+"按钮。点击某天的"+"按钮，可以直接为该日期添加一条工作日志条目，此时日志时间范围会自动切换为该日的"日志"视图。这与工具栏的"+"按钮不同——工具栏的"+"是在当前显示的日期范围内添加条目，而日历上的"+"可以精确指定日期。</p>
+
+<hr>
+
+<h2 id="sec5">五、备忘与随记</h2>
+
+<p>左侧面板下方通过"备忘"和"随记"两个标签页提供两种记录方式。</p>
+
+<h3>备忘（提醒事项）</h3>
+<p>备忘用于管理带日期的提醒和待办事项。</p>
+
+<p><strong>创建备忘</strong>：点击"添加"按钮，在弹出的对话框中填写标题、内容、日期和时间，点击保存。</p>
+
+<p><strong>查看与搜索</strong>：备忘列表按日期筛选，显示当前选中日期相关的备忘。搜索框支持关键词过滤。</p>
+
+<p><strong>编辑与删除</strong>：点击备忘条目右侧的编辑按钮可修改内容，点击删除按钮可移除。</p>
+
+<p><strong>闹钟提醒</strong>：程序内置定时检查，到达设定时间后会弹出提醒通知。程序需要保持打开状态才能触发提醒。</p>
+
+<h3>随记（笔记管理）</h3>
+<p>随记用于管理分类笔记，适合记录和整理各类资料。</p>
+
+<p><strong>分类管理</strong>：顶部显示分类选择器，点击齿轮图标可打开分类管理界面，支持新建、重命名、删除分类。删除分类不会删除分类内的笔记。</p>
+
+<p><strong>笔记操作</strong>：</p>
+<ul>
+    <li><strong>新建</strong>：在选定分类下点击"新建"按钮创建笔记</li>
+    <li><strong>编辑</strong>：点击笔记标题进入编辑界面</li>
+    <li><strong>删除</strong>：在编辑界面点击"删除"按钮</li>
+    <li><strong>排序</strong>：支持按时间正序/倒序排列</li>
+</ul>
+
+<p><strong>分类加锁</strong>：点击"锁定"按钮，可为当前分类设置密码。设置后，该分类下的笔记需要输入密码才能查看和编辑。支持修改密码和取消锁定。</p>
+
+<p><strong>导入导出</strong>：</p>
+<ul>
+    <li><strong>导入</strong>：点击"导入"按钮，支持从 docx、html、js 等格式的文件导入笔记内容。程序会自动检测重复内容，避免重复导入</li>
+    <li><strong>导出</strong>：点击"导出"按钮，可将笔记保存为文件</li>
+</ul>
+
+<hr>
+
+<hr>
+
+<h2 id="sec6">六、工作日志</h2>
+
+<p>工作日志是程序的核心功能，用于记录和管理日常工作事务。</p>
+
+<h3>数据文件</h3>
+<p>点击顶部工具栏的文件夹图标打开"数据文件"窗口。首次使用时需要选择数据文件夹，程序会扫描文件夹中的 .js 数据文件并列出。</p>
+
+<p><strong>选择文件夹</strong>：点击标题右侧的"+选择数据文件夹"按钮选择存放数据的目录。选定后，程序自动扫描并列出该目录下的所有 .js 数据文件。</p>
+
+<p><strong>路径显示</strong>：文件夹图标后显示当前数据文件夹的相对路径（形如 <code>./日志</code>），不显示 home 目录和用户名，麒麟系统下同样清爽。</p>
+
+<p><strong>文件夹自动恢复</strong>：选定的文件夹会被记住，下次打开程序时自动恢复，无需重新选择。如果浏览器要求重新授权，窗口里会出现一条黄色提示"上次使用的数据文件夹：×××"，点右侧的"一键恢复"按钮授权一次即可继续使用，不必重新浏览文件夹。</p>
+
+<p><strong>刷新列表</strong>：点击"刷新列表"按钮可重新扫描当前文件夹中的文件。如果文件夹权限失效，程序会尝试自动恢复；实在无法恢复时才会提示重新选择。</p>
+
+<p><strong>更改文件夹</strong>：点击"更改文件夹"按钮可切换到其他目录。</p>
+
+<p><strong>持续时间标签</strong>：列表中每个文件后都有一个蓝色圆角标签，显示该文件里数据覆盖的时间段，形如 <code>20251014--20261104</code>。标签结果会缓存下来，下次打开直接显示，不会每次都重新读取文件。</p>
+
+<p><strong>当前文件高亮</strong>：正在使用的那个数据文件所在行会自动选中并高亮（左侧蓝色竖条、浅蓝底、加粗），一眼就能看出当前读的是哪一份。</p>
+
+<p><strong>加载 / 保存</strong>：窗口底部左起依次是"加载"（打开选中文件，等同于原来的"确定"）、红色"保存"（把当前缓存里的数据写回选中的那个 .js 文件，成功后右下角弹出提示）、"取消"。<strong>保存前请先在列表中选中目标文件</strong>，否则会提示先选择文件。</p>
+
+<p><strong>演示模板</strong>：窗口里不再单独放"加载演示模板"按钮。如果第一次打开时磁盘上一个数据文件都没有，程序会<strong>自动</strong>加载内置演示模板，方便先了解数据格式。</p>
+
+<h3>视图模式</h3>
+<ul>
+    <li><strong>表格视图</strong>：以表格形式展示日志数据，每行一条记录，包含日期、类别、内容、状态等列</li>
+    <li><strong>页面视图</strong>：按周展示，以卡片形式呈现每周的日志内容，支持翻页浏览</li>
+    <li><strong>多维态势图</strong>：以时间轴形式展示任务轨迹，直观呈现工作进展</li>
+</ul>
+
+<h3>时间范围</h3>
+<p>点击工具栏的时间范围选择器，可选择不同的时间粒度：</p>
+<ul>
+    <li><strong>日</strong>：查看单天的日志</li>
+    <li><strong>周工作</strong>：按周查看（默认视图）</li>
+    <li><strong>月工作</strong>：按月查看</li>
+    <li><strong>季度工作</strong>：按季度查看</li>
+    <li><strong>半年工作</strong>：按半年查看</li>
+    <li><strong>年度工作</strong>：按年查看</li>
+    <li><strong>自定义</strong>：手动指定起止日期（双击时间显示区域可打开日期选择器）</li>
+</ul>
+
+<h3>导航操作</h3>
+<ul>
+    <li><strong>前后翻页</strong>：点击左右箭头，切换到上一个或下一个时间段</li>
+    <li><strong>回到今天</strong>：点击"今天"按钮，快速回到当前时间段</li>
+</ul>
+
+<h3>添加日志条目</h3>
+<p>点击工具栏右侧的"+"按钮，弹出添加条目对话框。填写日期、类别、内容、状态等信息后保存。</p>
+
+<blockquote>
+<p><strong>提示</strong>：如果需要为特定日期添加条目，可以使用左侧日历上对应日期的"+"按钮，这样日期会自动填好。</p>
+</blockquote>
+
+<p><strong>内容必填</strong>：日志的"内容"为必填项。如果内容为空（只有事项、没有正文），点"保存"会被拦下并提示"日志内容不能为空"，不会生成记录；同时程序会在保存和刷新列表时自动清理历史遗留的空内容记录，这类记录也不会显示在列表中。</p>
+
+<p><strong>从周工作添加为日志</strong>：在页面视图的周工作分项上右键选"添加为日志"，会打开编辑框并自动带入事项名称。若该事项已绑定过日志，会直接打开那条日志继续编辑，不会重复新建；未填写内容就关闭或保存，程序会清掉这条临时占位，不会留下"只有事项没有内容"的记录。</p>
+
+<h3>周工作总结</h3>
+<p>当事项被认定为"周工作"（事项名称含"周"和"工作"）时，"备注"字段自动改为"总结"，并直接显示在页面视图的周工作下方。</p>
+<ul>
+    <li><strong>显示规则</strong>：有总结时"总结"二字单独占一行，左侧有一条自上而下由浅粉渐变到深红的竖线作装饰，右侧是"导出文档"按钮，下面按编辑窗同样的格式显示正文；超过 3 行自动用省略号收起；没有总结时只显示"总结"和装饰竖线，下面提示灰色的"总结…"</li>
+    <li><strong>导出文档</strong>：点标题行右侧的"导出文档"，直接把本条总结导出为 Word（.docx），文件名形如"20261028-1229 周工作梳理总结（2026年10月26日至11月1日）.docx"，日期按该周周一至周日自动生成（同月只写一次月份、跨年写全两年）；正文保留编辑窗里的层级与注释格式</li>
+    <li><strong>查看全文</strong>：单击总结区域会弹出浮窗显示完整内容，浮窗标题为"查看全文"（点外部或"×"关闭）。浮窗可以按住标题栏拖动到任意位置；内容不足 3 行、甚至暂时没有总结时也能打开，方便直接录入</li>
+    <li><strong>浮窗里的编辑按钮</strong>："查看全文"浮窗右上角有一个"编辑"按钮，点它可直接打开总结编辑窗口，不必先关掉浮窗再双击</li>
+    <li><strong>双击编辑</strong>：双击总结区域同样能打开总结编辑窗口。窗口可拖动标题栏移动、可拖右下角调整大小；没有遮罩层，编辑时仍可点击操作下方页面的内容</li>
+    <li><strong>编辑区功能完整</strong>：总结窗口内嵌了笔记模块的完整工具栏和编辑区（文字、段落、层级、目录、格式、跳转、缩放、粘入、复制、清空）；编辑期间主界面笔记面板会临时让位，关闭总结窗口后自动还原原来的笔记内容；编辑时右键菜单和层级菜单会浮在窗口之上，不会被遮住</li>
+    <li><strong>自动分层</strong>：带蓝色横格线，文字与横线严格对齐；所有段落首行缩进 2 个字符。以"一、二、三、"开头自动设为一级标题，以"1. 2. 3."开头自动设为二级标题；自动分层只升级不降级，在段落最前面补写文字也不会把已有标题打回正文；二级标题的句号后内容自动转为正文样式；正文中的括号内容（如"（详见附件）"）自动转成楷体小字注释，与笔记模块规则一致</li>
+    <li><strong>手动设层级</strong>：选中段落后用工具栏「层级」菜单，或在编辑区右键选择层级</li>
+<li><strong>上周 / 下周预览</strong>：底部左侧按钮名为"<strong>上周</strong>"（背景为淡紫色）。点击后在编辑窗左侧并排打开一个预览窗，<strong>一打开就显示上周</strong>的周工作；点顶部的 <code>›</code> 翻到下周，点 <code>‹</code> 再回到上周，只在这两周之间切换，不会跑到更远的周。预览窗宽度默认是编辑窗的一半，<strong>拖动它右边框可以自由调宽调窄</strong>（悬停时右边框会出现一条拖动手柄），高度与编辑窗一致、字号也一致。内容每条分两段：<strong>第 1 段</strong>是该条周工作的总结内容，保留编辑时设置的层级与注释格式；中间一条蓝色渐变分界线；<strong>第 2 段</strong>是具体信息（时间、状态、所属周期、工作内容）。总结为空时第 1 段连同分界线整段隐藏，只留第 2 段。该周有多条周工作时会依次列出、中间用细线隔开；完全没有记录则显示"该周没有周工作记录"。点"×"关闭预览</li>
+    <li><strong>保存</strong>：点"保存"会把文字和格式（每段的层级、字体字号、段落缩进）一起存下来，下次打开原样显示，不会再重新自动分层；底部"上周""保存""关闭"按钮并排居中；点"关闭"或按 Esc 不保存</li>
+</ul>
+
+<h3>附件</h3><p>编辑日志时可在"附件"一行添加本机文件或文件夹，附件以蓝色文件名超链接的形式显示：</p>
+<ul>
+    <li><strong>选择文件…</strong>：调用本机"办公助手"服务的系统选择框，一次可勾选多个文件（如多张截图），选完自动加入附件列表</li>
+    <li><strong>选择文件夹…</strong>：同上，可一次选择多个文件夹</li>
+    <li><strong>手动填写</strong>：也可在"路径"框粘贴完整路径后点"+ 添加"；输入路径时会自动带出名称</li>
+    <li><strong>点击打开</strong>：点击附件名称即请求办公助手调用系统默认程序打开（麒麟用 xdg-open，Windows 用文件关联程序）；若服务未运行，会自动把路径复制到剪贴板作为兜底</li>
+    <li><strong>改 / ×</strong>：分别用于修改名称路径、移除该附件</li>
+</ul>
+<blockquote>
+<p><strong>提示</strong>："选择文件/文件夹"依赖办公助手服务（默认 http://127.0.0.1:8737）。服务未启动时会自动回退为页面内的文件浏览器；两者都不可用时仍可手动粘贴路径。</p>
+</blockquote>
+
+<h3>日志条目状态</h3>
+<p>每条日志可设置不同的状态标记：</p>
+<ul>
+    <li><strong>紧急</strong>：红色标记，表示紧急任务</li>
+    <li><strong>正常</strong>：默认状态</li>
+    <li><strong>已完成</strong>：表示任务完成</li>
+    <li><strong>备忘</strong>：备忘性质的记录</li>
+    <li><strong>取消</strong>：已取消的任务</li>
+</ul>
+
+<h3>搜索功能</h3>
+<ul>
+    <li><strong>关键词搜索</strong>：点击工具栏的搜索按钮展开搜索框，输入关键词后匹配的日志条目高亮显示</li>
+    <li><strong>清除搜索</strong>：点击搜索框右侧的"清除"按钮，恢复完整视图</li>
+</ul>
+
+<h3>周日志详情</h3>
+<p>在页面视图中，点击某周的日志条目可弹出详情面板，显示该周完整日志。详情面板支持拖动和调整大小。</p>
+
+<h3>文件操作</h3>
+<ul>
+    <li><strong>打开文件</strong>：点击顶部文件夹图标打开"数据文件"窗口，选中文件后点"加载"</li>
+    <li><strong>保存到缓存</strong>：保存图标下拉菜单第一项，把当前数据写入浏览器缓存（双击保存图标效果相同）</li>
+    <li><strong>保存数据</strong>：保存图标下拉菜单第二项，直接把当前数据写回<strong>当前正在使用的那个 .js 文件</strong>，效果等同于"数据文件"窗口里的红色"保存"按钮。若还没有指定数据文件，会提示并自动打开"数据文件"窗口让您先选一个</li>
+    <li><strong>另存为</strong>：保存图标下拉菜单第三项，以当前时间新建一份 .js 数据文件（形如 <code>20261104-1627 数据.js</code>），默认仍保存在同一个数据文件夹里</li>
+    <li><strong>红色保存按钮</strong>：在"数据文件"窗口里，可把当前数据保存到<strong>列表中选中的任意一个</strong> .js 文件，用于备份或回填历史文件</li>
+    <li><strong>导出</strong>：周工作总结支持导出为 DOCX（Word 文档），详见上文"导出文档"</li>
+</ul>
+
+<hr>
+
+<h2 id="sec7">七、通讯录</h2>
+
+<p>通讯录模块提供联系人管理功能，可通过顶部工具栏的"通讯录"按钮切换显示。</p>
+
+<h3>基本操作</h3>
+<ul>
+    <li><strong>查看联系人</strong>：切换到通讯录视图后，以列表形式显示所有联系人</li>
+    <li><strong>添加联系人</strong>：点击添加按钮，填写姓名、电话、地址等信息</li>
+    <li><strong>编辑联系人</strong>：点击联系人条目进入编辑模式，支持动态字段（可添加自定义信息项）</li>
+    <li><strong>删除联系人</strong>：删除不需要的联系人记录</li>
+</ul>
+
+<hr>
+
+<h2 id="sec8">八、计时与闹钟</h2>
+
+<p>程序内置计时功能，点击顶部工具栏的时间显示区域可打开计时面板。</p>
+
+<h3>秒表模式</h3>
+<p>正计时，点击开始/暂停/重置按钮控制。计时结果显示在顶部时间区域。</p>
+
+<h3>倒计时模式</h3>
+<p>支持预设时间（5、10、15、20、25、30、45、60 分钟）或自定义时间。倒计时结束后弹出通知。</p>
+
+<h3>闹钟模式</h3>
+<p>可设置多个闹钟，指定小时和分钟。到达设定时间后弹出提醒。</p>
+
+<blockquote>
+<p><strong>注意</strong>：计时功能需要浏览器保持打开状态。关闭浏览器后计时会停止。</p>
+</blockquote>
+
+<hr>
+
+<h2 id="sec9">九、数据保存与管理</h2>
+
+<p>程序采用两层数据保存机制，兼顾使用便捷性和数据安全性。</p>
+
+<h3>自动保存（浏览器缓存）</h3>
+<p>所有操作会实时保存到浏览器的 localStorage 中。关闭浏览器后再次打开，数据会自动恢复。这是默认行为，无需手动操作。</p>
+
+<h3>手动保存（文件持久化）</h3>
+<p>浏览器缓存可能被清除（例如清理浏览器数据、更换浏览器等），因此重要数据建议手动保存到文件。</p>
+
+<p><strong>保存方法</strong>：点击顶部工具栏的保存图标，下拉菜单有三个选项——</p>
+<ul>
+    <li><strong>保存到缓存</strong>：写入浏览器缓存，最快，适合随手存一下（双击保存图标同样效果）；</li>
+    <li><strong>保存数据</strong>：直接把当前数据写回当前正在使用的那个 .js 数据文件；</li>
+    <li><strong>另存为</strong>：以当前时间另建一份 .js 数据文件，默认仍在同一个数据文件夹里，用于做阶段存档。</li>
+</ul>
+<p>也可以点击文件夹图标打开"数据文件"窗口，选中任意一个 .js 后排点红色"保存"，把当前数据写进那份文件。下次打开程序时，程序会自动加载上次使用的那个文件。</p>
+
+<p><strong>保存内容</strong>：一份数据文件里同时装着工作日志、备忘事项、随记（含分类）、笔记内容等全部业务数据，所以只要保住这份 .js，整个程序的数据就都在。这些数据随 U 盘移动，在不同电脑上打开时自动恢复。登录账号信息只保存在浏览器缓存中，不随文件移动。</p>
+
+<p><strong>建议</strong>：定期手动保存，特别是在完成重要工作之后。</p>
+
+<h3>文件夹记忆</h3>
+<p>程序会记住选择过的数据文件夹，连文件夹名称一起保存在浏览器的 IndexedDB 里，关闭浏览器也不会丢失。文件夹名同时记在 localStorage 里，用于重启后直接显示路径。</p>
+
+<p><strong>重启后自动显示</strong>：如果浏览器仍然授予着该文件夹的权限，下次打开程序会直接恢复文件夹、自动加载上次使用的数据文件，底栏也会显示"当前数据：xxx.js"，全程不用点任何按钮。</p>
+
+<p><strong>权限失效时</strong>：浏览器的安全策略规定——跨重启重新授权必须由用户亲手点一次，程序无法替您点。此时"数据文件"窗口顶部会出现一条黄色提示"上次使用的数据文件夹：×××"，点右侧的<strong>"一键恢复"</strong>按钮，确认一次授权即可，不用重新浏览文件夹。</p>
+
+<h3>清除数据</h3>
+<ol>
+    <li>点击底部状态栏的"清空数据"按钮（前面带红色小图标）</li>
+    <li>在弹出的对话框中，勾选要清除的数据类型（默认全部勾选）：
+        <ul>
+            <li>日志</li>
+            <li>备忘</li>
+            <li>随记</li>
+            <li>笔记</li>
+        </ul>
+        点每个条目即可切换勾选状态。
+    </li>
+    <li>点击"确认清除"按钮</li>
+</ol>
+
+<p><strong>注意</strong>：数据清除后无法恢复，请谨慎操作。</p>
+
+<h3>数据存储位置汇总</h3>
+<table>
+<thead>
+<tr><th>数据类型</th><th>存储位置</th><th style="text-align:center">随 U 盘移动</th><th style="text-align:center">自动恢复</th></tr>
+</thead>
+<tbody>
+<tr><td>登录信息</td><td>localStorage</td><td style="text-align:center">否</td><td style="text-align:center">是</td></tr>
+<tr><td>备忘/随记</td><td>localStorage + 文件</td><td style="text-align:center">是</td><td style="text-align:center">是</td></tr>
+<tr><td>笔记内容</td><td>localStorage + 文件</td><td style="text-align:center">是</td><td style="text-align:center">是</td></tr>
+<tr><td>工作日志</td><td>localStorage + 文件</td><td style="text-align:center">是</td><td style="text-align:center">是</td></tr>
+<tr><td>当前数据文件名</td><td>localStorage + IndexedDB</td><td style="text-align:center">否</td><td style="text-align:center">是</td></tr>
+<tr><td>文件夹选择</td><td>IndexedDB</td><td style="text-align:center">否</td><td style="text-align:center">是（打开“数据文件”时自动恢复；浏览器要求时点一次“一键恢复”）</td></tr>
+<tr><td>文件名时间标签</td><td>localStorage</td><td style="text-align:center">否</td><td style="text-align:center">是</td></tr>
+<tr><td>计时状态</td><td>localStorage</td><td style="text-align:center">否</td><td style="text-align:center">是</td></tr>
+</tbody>
+</table>
+
+<hr>
+
+<h3>在麒麟系统上安装 / 更新</h3>
+<p>程序目录下的 <code>发布</code> 文件夹内提供 <code>记事本-安装更新包-麒麟版（MMdd-HHmm）</code> 文件夹（桌面「打包测试」目录下），用于银河麒麟 / 统信 UOS 等国产 Linux 系统。使用方法：</p>
+<ol>
+    <li>把整个程序文件夹（或同名 <code>.tar.gz</code>，解压后 <code>.sh</code> 已带 755 可执行权限）复制到麒麟系统；</li>
+    <li>在终端执行 <code>bash 安装更新.sh</code>（或右键"在终端中打开"后运行）；</li>
+    <li>按弹窗提示确认，脚本会自动判断是"全新安装"还是"更新已有程序"；</li>
+    <li>安装完成后可选择自动创建桌面快捷方式；以后双击桌面「记事本」图标即可使用。</li>
+</ol>
+
+<p><strong>更新不会丢数据</strong>：脚本只覆盖程序文件（HTML、css、js、data 资源），以下内容一律原样保留并跳过——</p>
+<ul>
+    <li><code>日志文件/</code>：各类日志 .js、<code>js/appdata.js</code> 持久化数据、日志模板；</li>
+    <li><code>导出文档/</code>：所有导出的文档；</li>
+    <li><code>缓存</code>、<code>cache</code>、<code>备份</code>、<code>backup</code>、<code>回收站</code> 等目录；</li>
+    <li>浏览器里保存的登录信息、文件夹选择记录（localStorage / IndexedDB）也不受影响。</li>
+</ul>
+
+<p>若程序目录里还没有 <code>日志文件/</code> 或 <code>导出文档/</code>（例如从很旧的版本升级），脚本会自动补上缺失的模板与目录，已有文件不会被替换。</p>
+
+<p><strong>目标定位规则</strong>：优先用 <code>--target</code> 指定目录；否则依次判断"脚本所在目录就是程序目录→原地更新"、"安装包在程序目录内部→更新其上级"、"安装包与唯一的程序目录并排→更新它"；都不满足则新建「记事本」文件夹。规则不明确时（并排有多个程序目录）脚本会报错并提示用 <code>--target</code>，不会乱装。</p>
+
+<h3>在 Windows 系统上安装 / 更新</h3>
+<p>程序目录下的 <code>发布</code> 文件夹内还提供 <code>记事本-安装更新包-Windows版</code> 文件夹，用于 Windows 电脑。使用方法：</p>
+<ol>
+    <li>把文件夹复制到本机任意位置（U 盘也可以，装完即可删除）；</li>
+    <li>双击 <code>安装更新.bat</code>，按提示确认；</li>
+    <li>脚本会判断是"全新安装"还是"更新已有程序"，并在结束时询问是否创建桌面快捷方式、是否立即打开。</li>
+</ol>
+
+<p>保留数据范围与麒麟版一致：只覆盖 <code>电子记事本.html</code>、<code>help.html</code>、<code>css\</code>、<code>js\</code>、<code>data\</code>；<code>日志文件\</code>、<code>导出文档\</code>、<code>缓存</code>、<code>备份</code>、<code>回收站</code> 等一律跳过。目标里缺少 <code>日志文件\</code> 或 <code>导出文档\</code> 时会自动补模板与空目录。</p>
+
+<p>常用参数：<code>安装更新.bat -Target "D:\工具\记事本"</code> 指定位置；<code>-Yes</code> 全部默认确认；也可直接 <code>powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1</code> 运行并查看完整输出。安装日志写在脚本旁（<code>记事本安装日志-时间戳.txt</code>）。</p>
+
+<p>更新完成后若想重建桌面图标，双击程序目录里的 <code>创建桌面快捷方式.bat</code> 即可（图标取自 <code>data\logo.ico</code>）。</p>
+
+<hr>
+
+<h2 id="sec10">十、快捷键参考</h2>
+
+<table>
+<thead><tr><th>快捷键</th><th>功能</th></tr></thead>
+<tbody>
+<tr><td>Ctrl+Z</td><td>撤销</td></tr>
+<tr><td>Ctrl+Y</td><td>重做</td></tr>
+<tr><td>Ctrl+F</td><td>搜索</td></tr>
+<tr><td>Esc</td><td>关闭弹窗/退出全屏</td></tr>
+</tbody>
+</table>
+
+<hr>
+
+<h2 id="sec11">十一、常见问题</h2>
+
+<h3>数据丢失怎么办？</h3>
+<p>程序数据有两层保存：浏览器缓存（自动）和文件（手动）。如果只是关闭浏览器再打开，数据会自动恢复。如果数据确实丢失了，检查之前选择的文件夹中是否有保存的 .js 数据文件，重新打开即可恢复。建议定期手动保存重要数据。</p>
+
+<h3>清除浏览器缓存会怎样？</h3>
+<p>清除浏览器缓存会丢失 localStorage 中的数据，但不会影响已保存到文件的数据。需要注意的是，登录账号信息仅保存在浏览器缓存中，清除缓存后需要重新注册或登录。其他数据（如日志、笔记等）需要重新选择数据文件夹并加载文件恢复。</p>
+
+<h3>如何更换电脑或 U 盘？</h3>
+<p>工作日志、备忘、随记等数据保存在文件中，将整个程序文件夹复制到 U 盘即可随身携带。在新电脑上打开 <code>电子记事本.html</code>，程序会自动从文件恢复数据。但登录账号信息仅保存在浏览器缓存中，更换电脑后需要重新注册或登录。</p>
+
+<h3>程序无法打开？</h3>
+<p>确保使用现代浏览器（Chrome、Edge、Firefox、Safari）打开 HTML 文件。IE 浏览器不支持本程序。</p>
+
+<h3>文件操作失败？</h3>
+<p>文件打开/保存功能依赖 File System Access API，仅 Chrome 和 Edge 支持。其他浏览器只能使用下载方式保存文件（程序会自动改为"下载 .js"，您再手动把它移进数据文件夹），也无法实现文件夹自动恢复。</p>
+
+<h3>不小心点到红色"保存"会不会覆盖错文件？</h3>
+<p>"数据文件"窗口里的红色"保存"只会写入<strong>列表中已被选中</strong>的那个文件，未选中时会提示先选择，不会默认拿第一个文件开刀。保存前建议先核对蓝色时间标签和文件名；确实覆盖错了，还可以用"另存为"生成的旧文件找回。</p>
+
+<h3>重启后提示"上次使用的数据文件夹"？</h3>
+<p>这是浏览器的安全机制：跨浏览器重启重新授权同一个文件夹时，必须由用户亲手点一次，程序不能替您点。此时点黄色提示条右侧的<strong>"一键恢复"</strong>，在系统对话框里确认授权即可，不用重新浏览文件夹。只有换了文件夹、换了盘符或换了电脑，才需要点"更改文件夹"重新选择。</p>
+
+<h3>列表里的时间标签一直显示"读取中…"？</h3>
+<p>蓝色时间标签第一次显示的瞬间在后台读该文件并算出起止日期，通常不到一秒。如果长时间停在"读取中…"，多半是这个文件不是程序生成的 .js 数据文件（内容格式不认识），或者文件夹授权已失效。点"刷新列表"或"一键恢复"后重试即可；算过的结果会一直缓存，之后再打开不会重复读取。</p>
+
+<h3>随记导入出现重复内容？</h3>
+<p>程序在导入随记时会自动检测重复。如果导入的笔记内容与已有笔记的内容和时间完全相同，则不会重复导入。如果提示"没有新的随记需要导入"，说明这些笔记已经存在。</p>
+
+<h3>提醒不生效？</h3>
+<p>提醒功能需要浏览器保持打开状态。关闭浏览器或标签页后，提醒将不会触发。</p>
+
+<h3>周工作总结窗口不见了？</h3>
+<p>周工作总结编辑窗是浮动窗口，可能被其他内容遮挡。直接双击日志里的总结区域重新打开即可；编辑窗关闭时若有未保存的修改不会自动写入，请点"保存"。点"上周"时预览窗会贴在编辑窗旁边，若屏幕太窄会自动改贴到另一侧。</p>
+
+<hr>
+
+<h2>技术支持</h2>
+
+<p>本程序由周冉制作。</p>
+
+<p><strong>程序版本</strong>：电子记事本.html（多模块版，js/css 分离）</p>
+
+<p><strong>模块文件</strong>：</p>
+<table>
+<thead><tr><th>文件</th><th>功能</th></tr></thead>
+<tbody>
+<tr><td><code>电子记事本.html</code></td><td>主页面结构</td></tr>
+<tr><td><code>css/style.css</code></td><td>样式表</td></tr>
+<tr><td><code>js/store.js</code></td><td>数据中心与状态管理</td></tr>
+<tr><td><code>js/app.js</code></td><td>应用初始化、登录、计时</td></tr>
+<tr><td><code>js/main.js</code></td><td>启动引导</td></tr>
+<tr><td><code>js/utils.js</code></td><td>通用工具函数</td></tr>
+<tr><td><code>js/calendar-view.js</code></td><td>日历渲染</td></tr>
+<tr><td><code>js/reminder.js</code></td><td>备忘管理</td></tr>
+<tr><td><code>js/notes.js</code></td><td>随记管理</td></tr>
+<tr><td><code>js/work-log.js</code></td><td>工作日志模块</td></tr>
+<tr><td><code>js/contacts.js</code></td><td>通讯录模块</td></tr>
+<tr><td><code>js/appdata.js</code></td><td>持久化数据文件</td></tr>
+<tr><td><code>data/calendar.js</code></td><td>农历转换库</td></tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="footer">
+    <p>本手册基于程序源代码编写，如有功能变更请以实际程序为准。</p>
+</div>
+
+</div>
+</body>
+</html>

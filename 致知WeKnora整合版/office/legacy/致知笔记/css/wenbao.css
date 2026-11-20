@@ -1,0 +1,3837 @@
+﻿/* ============================================================
+   wenbao.css — 文稿三栏工作区
+   左：文稿列表（2）｜中：目录（3）｜右：编辑区（5）
+   风格：清新、清爽、庄重、大方，适合党政机关日常行文
+   ============================================================ */
+
+#notepadPanel {
+    width: min(1180px, calc(100vw - 30px));
+    border: 1px solid #DCE5DF;
+    border-radius: 10px;
+    box-shadow: 0 12px 34px rgba(24, 46, 38, 0.14), 0 2px 6px rgba(24, 46, 38, 0.06);
+}
+
+/* 面板顶部只剩一条可拖动的细条（原标题栏已并入顶栏操作区） */
+.npDragStrip {
+    flex: 0 0 6px;
+    height: 6px;
+    cursor: move;
+    background: linear-gradient(180deg, #F4F8F5 0%, #EDF3EF 100%);
+    border-bottom: 1px solid #E3EAE5;
+    position: relative;
+}
+.npDragStrip::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 2px;
+    width: 42px;
+    height: 2px;
+    margin-left: -21px;
+    border-radius: 1px;
+    background: #CBD9D1;
+    opacity: .8;
+}
+.npDragStrip:hover::after { background: #2E6B5E; }
+
+/* ---------------- 三栏骨架 ---------------- */
+.npWorkspace {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+    position: relative;
+    background: #FFFFFF;
+}
+
+/* 本机服务连接状态：已移到顶栏最右侧，样式见 css/shell.css */
+.npBridgeDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #A9B8B2;
+    flex: none;
+}
+@keyframes npBridgePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .25; }
+}
+
+/* 栏宽由 JS 写入的 CSS 变量控制，默认 2:3:5 */
+.npTopicPane {
+    flex: 0 0 var(--npTopicW, 20%);
+    width: var(--npTopicW, 20%);
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    /* 极浅天蓝：取顶栏「数据文件」按钮的蓝色系 */
+    background: linear-gradient(180deg, #F4FAFE 0%, #EAF4FC 100%);
+}
+
+.npDirPane {
+    flex: 0 0 var(--npDirW, 30%);
+    width: var(--npDirW, 30%);
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    /* 极浅草绿：取顶栏「文章列表」按钮的绿色系 */
+    background: linear-gradient(180deg, #F6FCF9 0%, #EDF8F2 100%);
+}
+
+.npEditorPane {
+    flex: 1 1 0;
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    position: relative;
+    background: #FFFFFF;
+}
+
+/* ---------------- 栏间拖动条 ---------------- */
+.npSplitter {
+    flex: 0 0 7px;
+    width: 7px;
+    position: relative;
+    cursor: col-resize;
+    background: #F1F6F3;
+    border-left: 1px solid #E4EBE6;
+    border-right: 1px solid #E4EBE6;
+    transition: background .15s;
+}
+.npSplitter::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 2px;
+    height: 26px;
+    margin: -13px 0 0 -1px;
+    border-radius: 1px;
+    background: #CBD9D1;
+    transition: background .15s, height .15s;
+}
+.npSplitter:hover,
+.npSplitter.npDragging {
+    background: #E3F0E9;
+    border-color: #B7D2C5;
+}
+.npSplitter:hover::after,
+.npSplitter.npDragging::after {
+    background: #2E6B5E;
+    height: 40px;
+}
+body.npSplitting {
+    cursor: col-resize;
+    user-select: none;
+}
+body.npSplitting * {
+    cursor: col-resize !important;
+}
+
+/* 拖动时禁掉卡片的 hover 位移，避免抖动 */
+body.npSplitting .npTopicItem:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* ---------------- 编辑区顶部的两栏开关 ---------------- */
+.npPaneToggles {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.npPaneToggle {
+    padding: 3px 8px;
+    border: 1px solid #D3DFD8;
+    border-radius: 4px;
+    background: #FBFDFC;
+    color: #8A9A92;
+    font-size: 11px;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    line-height: 1.5;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+}
+.npPaneToggle:hover {
+    background: #EDF4F0;
+    border-color: #AFC9BC;
+    color: #2E6B5E;
+}
+.npPaneToggle.active {
+    background: linear-gradient(180deg, #F0F8F3 0%, #E1EFE7 100%);
+    border-color: #9CC0B0;
+    color: #1B5A4B;
+    font-weight: 700;
+}
+
+.npEditorPane .notepadContent {
+    padding: 10px 14px 6px;
+}
+
+/* 单栏模式：隐藏左右两栏（顶栏的总开关，与编辑区两个分开关联动） */
+#notepadPanel.np-no-sides .npTopicPane,
+#notepadPanel.np-no-sides .npDirPane,
+#notepadPanel.np-no-sides .npSplitter {
+    display: none;
+}
+
+/* ---------------- 栏目标题 ---------------- */
+.npPaneHead {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px 8px;
+    border-bottom: 1px solid #E4EBE6;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.npPaneTitle {
+    font-family: "Songti SC", "SimSun", "宋体", serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #1E3B33;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1 1 auto;
+}
+
+.npPaneMeta {
+    font-size: 11px;
+    color: #93A29A;
+    flex: 0 0 auto;
+}
+
+.npPaneBtn {
+    flex: 0 0 auto;
+    padding: 3px 9px;
+    border: 1px solid #CFDCD5;
+    border-radius: 4px;
+    background: #FFFFFF;
+    color: #2C5B4D;
+    font-size: 11px;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+}
+.npPaneBtn:hover {
+    background: #E7F1EA;
+    border-color: #9FC0B1;
+    color: #17453A;
+}
+/* ---------------- 左栏：主题 ---------------- */
+/* 「主题」二字：小标宋 + 立体浮雕投影（本栏唯一的重装饰） */
+#npTopicPane .npPaneHead {
+    padding-bottom: 6px;
+    padding-top: 12px;      /* 与中部「标题」按钮垂直居中对齐 */
+    box-sizing: border-box;
+}
+#npTopicPane .npPaneTitle {
+    flex: 0 0 auto;
+    font-family: "FZXiaoBiaoSong-B05S", "FZXiaoBiaoSong", "方正小标宋简体", "Songti SC", "SimSun", serif;
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: 5px;
+    color: #1E4034;
+    text-shadow:
+        0 1px 0 #FFFFFF,
+        0 2px 0 #C9DBD1,
+        0 3px 0 #A9C2B4,
+        0 5px 7px rgba(24, 46, 38, 0.30);
+}
+#npTopicPane .npPaneMeta {
+    margin-left: 2px;
+    padding: 1px 7px;
+    border-radius: 9px;
+    background: #EDF4F0;
+    border: 1px solid #DCE7E0;
+    font-size: 10.5px;
+    letter-spacing: .3px;
+    color: #5D7A6E;
+    white-space: nowrap;
+}
+
+.npTopicList {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 10px 10px 14px;
+    overflow-x: hidden;
+}
+
+.npTopicItem {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 9px 10px 9px 12px;
+    margin-bottom: 7px;
+    border: 1px solid var(--tpLine, #DDE7E0);
+    border-radius: 7px;
+    background: linear-gradient(135deg, var(--tpA, #F7FAF8) 0%, var(--tpB, #EDF3EF) 100%);
+    cursor: pointer;
+    transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+}
+
+.npTopicItem:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(28, 52, 43, 0.08);
+    z-index: 2;
+}
+
+.npTopicItem.active {
+    border-color: var(--tpEdge, #1E5A4E);
+    box-shadow: 0 4px 14px rgba(28, 52, 43, 0.16);
+}
+.npTopicItem.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 7px;
+    bottom: 7px;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    background: var(--tpEdge, #1E5A4E);
+}
+
+.npTopicNum {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 20px;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid var(--tpLine, #DDE7E0);
+    font-family: "Times New Roman", "Georgia", serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    color: var(--tpEdge, #1E5A4E);
+    transition: background .16s ease, color .16s ease;
+}
+.npTopicItem.active .npTopicNum {
+    background: var(--tpEdge, #1E5A4E);
+    color: #FFFFFF;
+    border-color: var(--tpEdge, #1E5A4E);
+}
+
+.npTopicMain {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* 主题名：黑体；选中后放大，给名称留足空间 */
+.npTopicName {
+    font-family: "SimHei", "黑体", "Noto Sans CJK SC", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    letter-spacing: .4px;
+    color: #22322C;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transform-origin: left center;
+    transition: font-size .16s ease, letter-spacing .16s ease, color .16s ease;
+}
+.npTopicItem.active .npTopicName {
+    font-size: 15px;
+    letter-spacing: 1px;
+    font-weight: 700;
+    color: #14342A;
+}
+
+/* 悬停展开：只显示创建 / 更新时间（完整名称走原生悬停提示） */
+.npTopicDetail {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height .18s ease, opacity .18s ease, margin-top .18s ease;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    font-size: 10.5px;
+    line-height: 1.6;
+    color: #6F8279;
+}
+.npTopicItem:hover .npTopicDetail {
+    max-height: 60px;
+    opacity: 1;
+    margin-top: 4px;
+}
+.npTopicTime {
+    display: block;
+    margin-top: 2px;
+    text-align: right;
+    font-family: "KaiTi_GB2312", "KaiTi", "楷体", "STKaiti", serif;
+    font-size: 11.5px;
+    letter-spacing: .3px;
+    color: #7C8F86;
+}
+
+/* 右键菜单 */
+.npTopicCtx {
+    position: fixed;
+    z-index: 12000;
+    min-width: 132px;
+    padding: 4px 0;
+    background: #FFFFFF;
+    border: 1px solid #D5DFD9;
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(24, 46, 38, 0.18);
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    font-size: 12px;
+    color: #2C3B34;
+}
+.npTopicCtxItem {
+    padding: 7px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.npTopicCtxItem:hover { background: #EDF4F0; }
+.npTopicCtxItem.npDanger { color: #9C2B26; }
+.npTopicCtxItem.npDanger:hover { background: #F8E7E5; }
+.npTopicCtxItem[data-confirm="1"] {
+    background: #9C2B26;
+    color: #FFFFFF;
+    font-weight: 700;
+}
+.npTopicCtxItem[data-confirm="1"]:hover { background: #86241F; }
+
+/* 拖动排序：被拖项半透明，目标位置显示插入线 */
+.npTopicItem.npDragging {
+    opacity: .45;
+    transform: none;
+    box-shadow: 0 6px 16px rgba(28, 52, 43, 0.18);
+}
+.npTopicItem.npDropBefore { box-shadow: 0 -2px 0 0 #2E6B5E inset; }
+.npTopicItem.npDropAfter { box-shadow: 0 2px 0 0 #2E6B5E inset; }
+body.npOrdering { cursor: grabbing; user-select: none; }
+body.npOrdering .npTopicItem { cursor: grabbing; }
+body.npOrdering .npTopicItem:hover { transform: none; }
+body.npOrdering .npTopicItem:hover .npTopicDetail { max-height: 0; opacity: 0; margin-top: 0; }
+/* 每组 5 个循环配色 */
+.npTopicItem.tp0 { --tpA: #FBEEEC; --tpB: #F3DAD5; --tpLine: #E7C2BC; --tpEdge: #B23A32; }
+.npTopicItem.tp1 { --tpA: #EEF3F9; --tpB: #DCE6F2; --tpLine: #C2D3E6; --tpEdge: #2C5F8A; }
+.npTopicItem.tp2 { --tpA: #FBF3E7; --tpB: #F2E2CB; --tpLine: #E4CFAF; --tpEdge: #A9762F; }
+.npTopicItem.tp3 { --tpA: #F0F7F2; --tpB: #DCEBE1; --tpLine: #C2DBCB; --tpEdge: #2E6B5E; }
+.npTopicItem.tp4 { --tpA: #F4F1F8; --tpB: #E5DEEE; --tpLine: #D2C8E2; --tpEdge: #5B4B7A; }
+
+/* ---------------- 中栏：标题 / 提纲 ---------------- */
+.npDirHead {
+    gap: 6px;
+    padding: 7px 10px 7px 12px;
+    background: rgba(255, 255, 255, 0.62);
+}
+.npDirTabs {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    border: 1px solid #D3DFD8;
+    border-radius: 5px;
+    overflow: hidden;
+    background: #FBFDFC;
+}
+.npDirTab {
+    padding: 3px 13px;
+    border: none;
+    background: transparent;
+    color: #8A9A92;
+    font-family: "SimHei", "黑体", "Noto Sans CJK SC", sans-serif;
+    font-size: 12.5px;
+    letter-spacing: 1px;
+    line-height: 1.6;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+.npDirTab + .npDirTab { border-left: 1px solid #E2EAE5; }
+.npDirTab:hover { background: #EDF4F0; color: #2E6B5E; }
+.npDirTab.active {
+    background: linear-gradient(180deg, #F0F8F3 0%, #E1EFE7 100%);
+    color: #1B5A4B;
+    font-weight: 700;
+}
+.npDirHead #npDirRefreshBtn {
+    margin-left: auto;
+}
+/* 中部栏头「顺序 / 逆序」：小号文字按钮 */
+.npDirSort {
+    padding: 2px 8px;
+    font-size: 11.5px;
+    line-height: 1.6;
+}
+/* 中部刷新：小图标按钮，省空间 */
+.npDirRefresh {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    line-height: 1;
+    border-radius: 4px;
+}
+/* 中部「标题」左侧的笔记列表收起箭头 */
+.npDirArrow {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #CFDCD5;
+    border-radius: 4px;
+    background: #FFFFFF;
+    color: #2C5B4D;
+    font-family: Consolas, monospace;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+}
+.npDirArrow:hover { background: #E7F1EA; border-color: #9FC0B1; color: #17453A; }
+.npDirArrow[aria-expanded="false"] { background: #E7F1EA; border-color: #9FC0B1; }
+
+.npDirList {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 8px 0 18px;
+}
+
+.npDirItem {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    padding: 10px 14px;
+    border-bottom: 1px dashed #E4EBE6;
+    cursor: pointer;
+    transition: background .14s, color .14s;
+}
+.npDirItem:last-child { border-bottom: none; }
+.npDirItem:hover { background: #F4F9F6; }
+.npDirItem.active { background: #EBF3EE; }
+.npDirItem.active .npDirLabel { color: #17453A; font-weight: 700; }
+
+.npDirNum {
+    flex: 0 0 auto;
+    min-width: 16px;
+    font-family: "Times New Roman", "Georgia", serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #9BA9A1;
+    text-align: right;
+}
+.npDirItem.active .npDirNum { color: #2E6B5E; }
+
+.npDirLabel {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #33443C;
+    word-break: break-all;
+}
+
+.npDirEmpty {
+    padding: 22px 14px;
+    text-align: center;
+    font-size: 12px;
+    color: #A6B3AC;
+    letter-spacing: 1px;
+}
+.npDirEmpty.unnamed {
+    color: #6F7F77;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+
+/* ---------------- 右栏：编辑区 ---------------- */
+/* 主题名称只在左栏显示与编辑，右栏不再重复 */
+.npEditorPane .notepadTitleRow #notepadTitle { display: none; }
+
+.npEditorPane .notepadTitleRow {
+    margin-bottom: 8px;
+}
+.npEditorPane .notepadTitle {
+    font-family: "Songti SC", "SimSun", "宋体", serif;
+    font-size: 14px;
+    letter-spacing: .5px;
+}
+.npEditorPane hr {
+    border-top-color: #E8EEE9 !important;
+}
+
+#notepadPanel .notepadContent .notepadEditor {
+    border: 1px solid #E3EAE5;
+    border-radius: 6px;
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 120px);
+    box-shadow: inset 0 1px 2px rgba(28, 52, 43, 0.03);
+}
+#notepadPanel .notepadContent .notepadEditor:focus {
+    border-color: #A8C4B6;
+    box-shadow: 0 0 0 2px rgba(46, 107, 94, 0.08);
+}
+
+/* 编辑区底色改为极浅淡彩：保留每篇的区分度，又不压住行文 */
+#notepadPanel .notepadContent .notepadEditor.bg0 { background-color: #FDF4F3; }
+#notepadPanel .notepadContent .notepadEditor.bg1 { background-color: #F2F6FB; }
+#notepadPanel .notepadContent .notepadEditor.bg2 { background-color: #FCF7ED; }
+#notepadPanel .notepadContent .notepadEditor.bg3 { background-color: #F2F8F4; }
+#notepadPanel .notepadContent .notepadEditor.bg4 { background-color: #F6F3FA; }
+
+/* 标题文字颜色同样压低饱和度 */
+#notepadPanel .notepadTitle.color0 { color: #A2403A; }
+#notepadPanel .notepadTitle.color1 { color: #2C5F8A; }
+#notepadPanel .notepadTitle.color2 { color: #96702F; }
+#notepadPanel .notepadTitle.color3 { color: #2E6B5E; }
+#notepadPanel .notepadTitle.color4 { color: #5B4B7A; }
+
+/* 标题列表：与编辑区光标联动 */
+.npDirItem.selected { background: #E3EFE8; }
+.npDirItem.selected .npDirLabel { color: #123F34; font-weight: 700; }
+.npDirItem.selected .npDirNum { color: #1B5A4B; }
+
+/* 标题列表：拖动排序（整篇文章按顺序移动） */
+.npDirItem[draggable="true"] { cursor: grab; }
+.npDirItem.npDragging { opacity: .45; background: #EDF4F0; }
+.npDirItem.npDropBefore { box-shadow: 0 -2px 0 0 #2E6B5E inset; }
+.npDirItem.npDropAfter { box-shadow: 0 2px 0 0 #2E6B5E inset; }
+
+/* 标题列表：右键菜单 */
+.npDirCtx {
+    position: fixed;
+    z-index: 30050;
+    min-width: 150px;
+    padding: 4px;
+    background: #fff;
+    border: 1px solid #D8E3DD;
+    border-radius: 6px;
+    box-shadow: 0 8px 22px rgba(20, 50, 40, .16);
+    font-size: 13px;
+    color: #24352F;
+    user-select: none;
+}
+.npDirCtx .npDirCtxItem {
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.npDirCtx .npDirCtxItem:hover { background: #EBF3EE; color: #123F34; }
+.npDirCtx .npDirCtxItem.danger:hover { background: #FBEEEC; color: #B23A32; }
+
+/* 提纲视图：完全照搬 notepad.js「打开目录 → 文稿提纲」的列表样式 */
+.npOutlineStruct {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.npOutlineStruct li {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+    font-family: 'FangSong', '仿宋', '仿宋_GB2312', serif;
+    box-sizing: border-box;
+}
+.npOutlineStruct li:hover { background: #f5f7fa; color: #667eea; }
+.npOutlineStruct li.npOutlineTitle {
+    font-family: '方正小标宋简体', 'FZXiaoBiaoSong', 'SimSun', serif;
+    font-weight: normal;
+    padding-left: 6px;
+    color: #2c3e50;
+    border-bottom: 2px solid #667eea;
+    margin-bottom: 4px;
+}
+.npOutlineStruct li.npOutlineTitle:hover {
+    background: #eef1ff;
+    color: #2c3e50;
+}
+.npOutlineStruct li.npOutlineNone {
+    cursor: default;
+    color: #999;
+}
+.npOutlineStruct li.npOutlineNone:hover {
+    background: transparent;
+    color: #999;
+}
+.npOutlineStruct li.npOutlineSelected {
+    color: #1565c0 !important;
+    font-weight: bold;
+}
+/* 提纲条目字数标签：行尾右对齐 */
+.npOutlineStruct li.npOutlineCounted {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+.npOutlineStruct li.npOutlineCounted > .npOutlineCount {
+    margin-left: auto;
+    flex: 0 0 auto;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    font-size: 11.5px;
+    font-weight: normal;
+    color: #8A9C94;
+    text-align: right;
+    white-space: nowrap;
+    letter-spacing: 0;
+}
+.npOutlineStruct li.npOutlineSelected > .npOutlineCount { color: #1565c0; }
+/* 提纲页底部工具条：刷新 / 字数，固定在栏位最下方（不随列表滚动） */
+.npDirOutlineFoot {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 8px 12px 10px;
+    border-top: 1px solid #E1EEE6;
+    background: #F4FAF6;
+}
+.npDirOutlineFoot .npDirRefreshNow,
+.npDirOutlineFoot .npDirCountBtn {
+    height: 24px;
+    padding: 0 14px;
+    border: 1px solid #CFDCD5;
+    border-radius: 12px;
+    background: #FBFDFC;
+    color: #2E6B5E;
+    font-size: 12px;
+    cursor: pointer;
+}
+.npDirOutlineFoot .npDirRefreshNow:hover,
+.npDirOutlineFoot .npDirCountBtn:hover {
+    background: #E6F5EC;
+    border-color: #9DCBBB;
+}
+.npDirOutlineFoot .npDirCountBtn.active {
+    background: #2E6B5E;
+    border-color: #2E6B5E;
+    color: #FFFFFF;
+}
+.npDirOutlineFoot .npDirCountBtn.active:hover {
+    background: #245549;
+    border-color: #245549;
+    color: #FFFFFF;
+}
+/* 提纲条目右键菜单（沿用旧版 .paContextMenu 外观） */
+#npOutlineItemCtx.paContextMenu {
+    min-width: 96px;
+    font-size: 12.5px;
+    border-radius: 7px;
+    box-shadow: 0 10px 26px rgba(20, 50, 40, .2);
+    z-index: 2147483600;
+}
+#npOutlineItemCtx.paContextMenu .paCtxItem {
+    padding: 7px 16px;
+    font-size: 12.5px;
+}
+
+/* 提纲条目「修改」小弹窗 */
+.npOutlineEditDlg {
+    position: fixed;
+    z-index: 2147483601;
+    width: 360px;
+    padding: 14px 16px 12px;
+    background: #FFFFFF;
+    border: 1px solid #CFDCD5;
+    border-radius: 10px;
+    box-shadow: 0 18px 44px rgba(20, 50, 40, .26);
+    font: 12.5px/1.6 "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+.npOutlineEditTitle {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #2E6B5E;
+    margin-bottom: 8px;
+}
+.npOutlineEditInput {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 9px;
+    border: 1px solid #D3DFD8;
+    border-radius: 6px;
+    background: #FBFDFC;
+    font-family: 'FangSong', '仿宋', '仿宋_GB2312', serif;
+    font-size: 14px;
+    color: #23302B;
+    outline: none;
+}
+.npOutlineEditInput:focus {
+    border-color: #7FB8A2;
+    box-shadow: 0 0 0 2px rgba(46, 107, 94, .12);
+}
+.npOutlineEditOps {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+.npOutlineEditBtn {
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: 1px solid #D3DFD8;
+    background: #F7FBF8;
+    color: #3A4C45;
+    font-size: 12px;
+    cursor: pointer;
+}
+.npOutlineEditBtn.ghost:hover { background: #EDF4F0; }
+.npOutlineEditBtn.ok {
+    background: #2E6B5E;
+    border-color: #2E6B5E;
+    color: #FFFFFF;
+}
+.npOutlineEditBtn.ok:hover { background: #245549; }
+
+/* 细滚动条，避免打断清爽感 */
+.npTopicList::-webkit-scrollbar,
+.npDirList::-webkit-scrollbar {
+    width: 8px;
+}
+.npTopicList::-webkit-scrollbar-thumb,
+.npDirList::-webkit-scrollbar-thumb {
+    background: #D3DFD8;
+    border-radius: 4px;
+}
+.npTopicList::-webkit-scrollbar-thumb:hover,
+.npDirList::-webkit-scrollbar-thumb:hover {
+    background: #B9CBC1;
+}
+
+/* ---------------- 编辑框插图 ---------------- */
+#notepadEditor p.npImgLine {
+    text-align: center;
+    text-indent: 0 !important;
+    line-height: 1;
+    margin: .35em 0;
+    padding: 0;
+}
+#notepadEditor p.npImgLine img.npImg {
+    display: block;
+    margin: 0 auto;
+    height: auto;
+    max-width: 100%;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+#notepadEditor p.npImgLine img.npImg:hover {
+    border-color: rgba(102, 126, 234, .5);
+}
+#notepadEditor p.npImgLine img.npImg.npImgSel {
+    border-color: #667eea;
+    box-shadow: 0 0 0 1px rgba(102, 126, 234, .35);
+}
+body.npImgResizing {
+    cursor: nwse-resize;
+    user-select: none;
+}
+
+/* 控制点覆盖层（fixed，跟随图片位置） */
+.npImgBox {
+    position: fixed;
+    z-index: 2147483300;
+    pointer-events: none;
+    box-sizing: border-box;
+    border: 1px solid #667eea;
+    box-shadow: 0 0 0 1px rgba(102, 126, 234, .3);
+}
+.npImgBox[hidden] { display: none; }
+.npImgH {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    background: #fff;
+    border: 1px solid #667eea;
+    border-radius: 2px;
+    box-sizing: border-box;
+    pointer-events: auto;
+}
+.npImgH-nw { left: -5px; top: -5px; cursor: nwse-resize; }
+.npImgH-ne { right: -5px; top: -5px; cursor: nesw-resize; }
+.npImgH-sw { left: -5px; bottom: -5px; cursor: nesw-resize; }
+.npImgH-se { right: -5px; bottom: -5px; cursor: nwse-resize; }
+.npImgH-w { left: -5px; top: 50%; margin-top: -5px; cursor: ew-resize; }
+.npImgH-e { right: -5px; top: 50%; margin-top: -5px; cursor: ew-resize; }
+.npImgH:hover { background: #667eea; }
+.npImgBadge {
+    position: absolute;
+    right: -1px;
+    bottom: -20px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: rgba(44, 62, 80, .82);
+    color: #fff;
+    font-family: 'Microsoft YaHei', sans-serif;
+    font-size: 11px;
+    line-height: 16px;
+    white-space: nowrap;
+}
+
+/* ---------------- 预览栏（覆盖主题 + 目录两栏） ---------------- */
+.npPreviewPane {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--npPrevW, 50%);
+    display: none;
+    flex-direction: column;
+    min-height: 0;
+    z-index: 6;
+    /* 极浅紫：取顶栏「参考资料」按钮的紫色系 */
+    background: linear-gradient(180deg, #F8F5FE 0%, #F0EAFB 100%);
+    border-right: 1px solid #E7DFF4;
+    box-shadow: 6px 0 16px rgba(72, 52, 118, .08);
+}
+#npWorkspace.np-preview-on .npPreviewPane {
+    display: flex;
+}
+/* 预览栏是 absolute，盖在「数据文件栏 + 文章列表栏」之上，不占 flex 流。
+   编辑区紧跟左两栏排布，只需再让出「预览栏宽 − 左两栏实占」这一段差值
+   （--npPrevShift 通常为 0；手动把预览栏拖宽时才有值）。
+   ⚠️ 不要写成 margin-left: var(--npPrevW)：左两栏仍占 flex 位置，会再叠一次，把编辑区挤出容器。 */
+#npWorkspace.np-preview-on .npEditorPane,
+#npWorkspace.np-mv-on .npEditorPane {
+    margin-left: var(--npPrevShift, 0px);
+}
+/* 预览栏右边框拖动条：拖它 = 同时改预览栏与编辑区宽度（二者互补） */
+.npPrevResizer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--npPrevW, 50%);
+    width: 7px;
+    margin-left: -3px;
+    cursor: ew-resize;
+    z-index: 7;
+    display: none;
+    touch-action: none;
+}
+#npWorkspace.np-preview-on .npPrevResizer,
+#npWorkspace.np-mv-on .npPrevResizer { display: block; }
+/* 多窗预览打开时拖动条压在多窗浮层（z-index:30）之上，否则点不到 */
+#npWorkspace.np-mv-on .npPrevResizer { z-index: 32; }
+.npPrevResizer::before {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: transparent;
+    transition: background .12s;
+}
+.npPrevResizer:hover::before,
+.npPrevResizer.npDragging::before {
+    background: #8B7BC0;
+    box-shadow: 0 0 0 1px rgba(139,123,192,.28);
+}
+/* 拖动中禁止选中，光标全局变成双向箭头 */
+body.npPrevResizing { cursor: ew-resize !important; user-select: none; }
+body.npPrevResizing * { cursor: ew-resize !important; }
+.npPrevHead {
+    border-bottom: 1px solid #EDF1EE;
+}
+.npPrevBody {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.npPrevPane {
+    display: none;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+}
+.npPrevPane.show { display: flex; }
+.npPrevBar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px 6px;
+    flex: 0 0 auto;
+}
+.npPrevSelect {
+    height: 26px;
+    max-width: 60%;
+    padding: 0 6px;
+    border: 1px solid #D3DFD8;
+    border-radius: 4px;
+    background: #FBFDFC;
+    color: #2C3E50;
+    font-size: 12px;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    outline: none;
+    cursor: pointer;
+}
+.npPrevSelect:focus { border-color: #9CC0B0; }
+.npPrevHint {
+    font-size: 11px;
+    color: #8C9C94;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+.npPrevDoc {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 6px 16px 16px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #26333A;
+    font-family: "FangSong_GB2312", "仿宋_GB2312", "FangSong", "仿宋", serif;
+    word-break: break-word;
+}
+.npPrevDoc p {
+    margin: 0;
+    text-align: justify;
+    text-indent: 2em;
+}
+.npPrevDoc img {
+    max-width: 100%;
+    height: auto;
+}
+.npPrevEmpty {
+    padding: 24px 16px;
+    color: #8C9C94;
+    font-size: 12px;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+
+/* ---------------- 预览栏：功能区 / 本地文件 / 附件 ---------------- */
+.npPrevOps {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: flex-end;
+    padding: 0 6px 0 4px;
+}
+.npPrevOps .npPrevSelect {
+    flex: 1 1 auto;
+    min-width: 90px;
+    max-width: none;
+}
+.npPrevFolderSlots {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 auto;
+}
+.npPrevSlot {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #D3DFD8;
+    border-radius: 4px;
+    background: #FBFDFC;
+    cursor: pointer;
+    line-height: 1;
+}
+.npPrevSlot:hover { background: #EDF4F0; border-color: #9CC0B0; }
+.npPrevSlot img { width: 15px; height: 15px; object-fit: contain; display: block; }
+.npPrevSlot.set { background: #E8F3EC; border-color: #9CC0B0; }
+.npPrevSlot.cur { box-shadow: inset 0 0 0 2px #4C9B7E; }
+.npPrevAddBtn {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid #2E6B5E;
+    border-radius: 4px;
+    background: #2E6B5E;
+    color: #FFFFFF;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+}
+.npPrevAddBtn:hover { background: #245549; border-color: #245549; }
+.npPrevHintRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px 0;
+    flex: 0 0 auto;
+}
+
+/* 本地文件页：路径条左右分栏 —— 左路径 / 右文件夹名标签 */
+.npFvPath {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-bottom: 1px solid #EDF1EE;
+    font-size: 11px;
+    color: #6E7F76;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    min-width: 0;
+}
+.npFvPathText {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.npFvPathTag {
+    flex: 0 0 auto;
+    max-width: 45%;
+    padding: 1px 8px;
+    border-radius: 9px;
+    background: #E8F3EC;
+    border: 1px solid #C4DED0;
+    color: #2E6B5E;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: default;
+}
+.npFvBody {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.npFvSplit {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+.npFvTree {
+    flex: 0 0 34%;
+    min-width: 88px;
+    max-width: 220px;
+    overflow: auto;
+    padding: 4px 4px 10px;
+    border-right: 1px solid #EDF1EE;
+}
+.npFvView {
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+    background: #F7FAF8;
+}
+.npFvRow {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    height: 24px;
+    padding-right: 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #35463D;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.npFvRow:hover { background: #EDF4F0; }
+.npFvRow.cur { background: #DCEBE3; color: #1F4D42; }
+.npFvRow img { width: 14px; height: 14px; object-fit: contain; flex: 0 0 auto; }
+.npFvRow .nm { overflow: hidden; text-overflow: ellipsis; }
+.npFvArrow { width: 11px; flex: 0 0 auto; color: #8C9C94; font-size: 9px; }
+.npFvEmpty {
+    padding: 20px 12px;
+    font-size: 12px;
+    color: #8C9C94;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    line-height: 1.7;
+}
+.npFvFileHead {
+    padding: 7px 10px;
+    border-bottom: 1px solid #E4EBE6;
+    background: #FFFFFF;
+    font-size: 11px;
+    color: #6E7F76;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.npFvFileBody {
+    padding: 8px 10px 16px;
+}
+.npFvImg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+}
+.npFvFrame {
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+    border: 0;
+    background: #FFFFFF;
+}
+.npFvPre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #26333A;
+    font-family: Consolas, "Microsoft YaHei", monospace;
+}
+.dv-fit { width: 100%; overflow: hidden; }
+.dv-fit-inner {
+    transform-origin: top left;
+    max-width: none;
+}
+.dv-fit-inner p,
+.dv-fit-inner table { max-width: none; }
+
+/* 附件页 */
+.npAttachTools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border-bottom: 1px solid #EDF1EE;
+    flex: 0 0 auto;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+.npAttachCount {
+    font-size: 11px;
+    color: #6E7F76;
+    margin-right: auto;
+}
+.npAttachTool {
+    height: 22px;
+    padding: 0 7px;
+    border: 1px solid #D3DFD8;
+    border-radius: 4px;
+    background: #FBFDFC;
+    color: #2C3E50;
+    font-size: 11px;
+    cursor: pointer;
+}
+.npAttachTool:hover { background: #EDF4F0; border-color: #9CC0B0; }
+/* 附件区：网格与预览层叠放在同一块区域 */
+.npAttachStage {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+.npAttachGrid {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 8px;
+    padding: 10px 10px 14px;
+    /* 背景透明：透出预览栏的浅紫 */
+    background: transparent;
+}
+.npAttachItem {
+    width: 84px;
+    border: 1px solid #E4EBE6;
+    border-radius: 5px;
+    background: #FFFFFF;
+    padding: 5px;
+    cursor: pointer;
+    text-align: center;
+}
+.npAttachItem:hover { border-color: #9CC0B0; background: #FBFDFC; }
+.npAttachItem img.thumb {
+    width: 100%;
+    height: 52px;
+    object-fit: contain;
+    display: block;
+    margin-bottom: 4px;
+}
+.npAttachItem .lb {
+    font-size: 11px;
+    color: #35463D;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.npAttachItem .del {
+    position: absolute;
+    display: none;
+}
+.npAttachWrap { position: relative; }
+
+/* 截屏提示条 */
+.npAttachShotTip {
+    display: none;
+    flex: 0 0 auto;
+    padding: 6px 10px;
+    background: #FFF8E1;
+    border-bottom: 1px solid #F0E0B8;
+    color: #7A5C13;
+    font-size: 11px;
+    line-height: 1.5;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+.npAttachShotTip.show { display: block; }
+
+/* 预览查看器（本地页 + 附件页共用）：
+   现在挂在 #npWorkspace 下，覆盖「参考资料」栏所在的整块区域（left 0 → --npPrevW）。 */
+.npAttachViewer {
+    display: none;
+    flex-direction: column;
+    min-height: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--npPrevW, 50%);
+    bottom: 0;
+    z-index: 20;
+    background: #16201C;
+    border: 0;
+    border-radius: 0;
+    overflow: hidden;
+    box-shadow: 6px 0 20px rgba(22, 32, 28, .18);
+}
+.npAttachViewer.show { display: flex; }
+/* 全屏 = 占满中部三栏工作区（不含顶栏与左栏），由 JS 设 top/left/width/height */
+.npAttachViewer.full {
+    position: fixed;
+    z-index: 99990;
+    margin: 0;
+    background: #16201C;
+    border: 0;
+    border-radius: 0;
+}
+.npAttachViewerBar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 9px;
+    border-bottom: 1px solid #2C3A34;
+    background: #1C2723;
+    flex: 0 0 auto;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+.npAttachViewerSpacer { flex: 1 1 auto; }
+.npAttachViewer.full .npAttachViewerBar {
+    background: #1C2723;
+    border-bottom-color: #2C3A34;
+}
+.npAttachViewerName {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 55%;
+    font-size: 12px;
+    color: #D8E6DF;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.npAttachViewerBtn {
+    flex: 0 0 auto;
+    height: 22px;
+    min-width: 22px;
+    padding: 0 8px;
+    border: 1px solid #3A4B44;
+    border-radius: 4px;
+    background: #26332E;
+    color: #D8E6DF;
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+}
+.npAttachViewerBtn:hover { background: #31423B; border-color: #4A5F56; }
+.npAttachViewerClose {
+    width: 22px;
+    padding: 0;
+    font-size: 14px;
+}
+.npAttachViewerStage {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0C1210;
+}
+/* 图片铺满预览区：等比缩放，长边贴齐，不留大片空白 */
+.npAttachViewerStage img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+/* 放大后可拖动平移（图片 / PDF）：手型光标 + 可拖 */
+.npAttachViewerStage.pannable { cursor: grab; }
+.npAttachViewerStage.pannable.panning { cursor: grabbing; }
+.npAttachViewerStage.pannable img,
+.npAttachViewerStage.pannable iframe { pointer-events: none; }
+/* PDF 在 docmode 下 iframe 位于 .npAttachDocBody 内，也要让出鼠标事件，
+   否则按住拖动会被 iframe 自身吃掉、手型拖不动。 */
+.npAttachViewerStage.docmode.pannable iframe { pointer-events: none; }
+.npAttachViewerStage.docmode.pannable .npAttachDocBody { cursor: grab; }
+.npAttachViewerStage.docmode.pannable.panning .npAttachDocBody { cursor: grabbing; }
+.npAttachViewerStage.pannable img {
+    /* 放大时超出视口的部分靠 transform 平移看到 */
+    object-fit: contain;
+    transform-origin: 0 0;
+    will-change: transform;
+}
+.npAttachViewerStage.pannable.is-zoomed img {
+    object-fit: none;
+    max-width: none;
+    max-height: none;
+}
+
+/* ---------- 非图片附件：docx / doc / pdf / html / 文本 / 文件夹（本界面内预览） ---------- */
+.npAttachDocBody {
+    flex: 1;
+    min-width: 0;
+    align-self: stretch;
+    overflow: auto;
+    background: #FFFFFF;
+    color: #1F2A30;
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 14px 18px 24px;
+    box-sizing: border-box;
+    text-align: left;
+}
+.npAttachDocBody[hidden] { display: none; }
+.npAttachViewerStage.docmode {
+    background: #FFFFFF;
+    align-items: stretch;
+    justify-content: flex-start;
+}
+.npAttachViewerStage.docmode img { display: none; }
+.npAttachDocBody iframe {
+    width: 100%;
+    height: 100%;
+    min-height: 460px;
+    border: 0;
+    display: block;
+}
+.npAttachDocBody pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 12px;
+}
+/* docx / doc 渲染出来的段落 */
+.npAttachDocBody .npfDocPage p { margin: 0 0 .5em; }
+
+/* 附件预览底栏：左属性、右「默认程序打开」 */
+.npAttachViewerFoot {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: #1B2621;
+    border-top: 1px solid #2E3D36;
+}
+.npAttachViewerKind {
+    font-size: 11px;
+    color: #9FB3AA;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 55%;
+}
+/* 底栏：左检索框（含每组关键字彩色数量圆点），右默认程序打开 + 缩放 */
+.npViewerFindWrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.npViewerFindInput {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 24px;
+    padding: 0 8px;
+    border: 1px solid #33453D;
+    border-radius: 5px;
+    background: #25332D;
+    color: #E4F0EA;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    font-size: 11.5px;
+    outline: none;
+    box-sizing: border-box;
+}
+/* 「默认程序打开」夹在检索框与缩放之间，不单独占一行 */
+#npAttachViewerFoot #npAttachOpenNative {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+#npAttachViewerFoot > .npAttachViewerSpacer {
+    display: none;
+}
+.npViewerFindInput::placeholder { color: #7E948A; }
+.npViewerFindInput:focus { border-color: #5FA88C; background: #223029; }
+.npViewerFindCount {
+    flex: 0 0 auto;
+    color: #9FB3AA;
+    font-size: 10.5px;
+    white-space: nowrap;
+}
+.npViewerHl { padding: 0 1px; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.npViewerHl0 { background: #FFE082; color: #241D00; }
+.npViewerHl1 { background: #90CAF9; color: #062234; }
+.npViewerHl2 { background: #FF8A80; color: #3A0B06; }
+.npViewerHl3 { background: #A5D6A7; color: #06280C; }
+.npViewerHl4 { background: #CE93D8; color: #2B0B33; }
+.npAttachViewer.full .npAttachViewerFoot { display: flex; }
+
+/* 文件夹列表 */
+.npAttachDirList { list-style: none; margin: 0; padding: 0; }
+.npAttachDirList li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 6px;
+    border-bottom: 1px solid #EFF3F1;
+    cursor: pointer;
+    font-size: 13px;
+}
+.npAttachDirList li:hover { background: #F2F8F5; }
+.npAttachDirList li.dir { font-weight: 600; color: #2E6B5E; }
+.npAttachDirList .npAttachDirIcon { flex: 0 0 auto; width: 15px; height: 15px; }
+.npAttachDirList .npAttachDirName {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.npAttachDirList .npAttachDirSize { flex: 0 0 auto; font-size: 11px; color: #8A9C94; }
+.npAttachDirEmpty { padding: 14px; color: #8A9C94; font-size: 12px; }
+
+/* ---------------- 目录栏：镜像 / 白板 ---------------- */
+#npDirList.npDirMirror {
+    overflow: auto;
+    padding: 14px 14px 5px;
+    box-sizing: border-box;
+}
+/* 关键：滚动内容自身也要有下边距，否则滚到中途时最后一行会贴着栏目底边被裁掉 */
+#npDirList.npDirMirror > .npMirrorView {
+    padding-bottom: 14px;
+}
+.npMirrorView {
+    font-family: "FangSong_GB2312", "仿宋_GB2312", "FangSong", "仿宋", serif;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #26333A;
+    word-break: break-word;
+}
+.npMirrorView p {
+    margin: 0;
+    text-indent: 2em;
+}
+.npMirrorView p[style*="center"] { text-indent: 0; }
+.npMirrorView img { max-width: 100%; height: auto; }
+#npDirList.npDirWhiteboard {
+    overflow: hidden;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+/* 白板舞台：文本框 + 右下角缩放条共用一个定位容器 */
+.npWhiteboardStage {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.npWhiteboardZoom {
+    position: absolute;
+    right: 14px;
+    bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 4px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .92);
+    border: 1px solid #D8E4DC;
+    box-shadow: 0 1px 4px rgba(38, 51, 58, .10);
+    z-index: 6;
+}
+.npWbZoomBtn {
+    width: 22px;
+    height: 20px;
+    line-height: 1;
+    padding: 0;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: #2E6B5E;
+    font-size: 14px;
+    cursor: pointer;
+}
+.npWbZoomBtn:hover { background: #E6F5EC; }
+.npWhiteboardZoomValue {
+    min-width: 38px;
+    text-align: center;
+    font-size: 11px;
+    color: #4A5B54;
+    user-select: none;
+    cursor: default;
+}
+.npWhiteboard {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 16px 16px 20px;
+    border: none;
+    outline: none;
+    resize: none;
+    background: #FCFDFC;
+    color: #26333A;
+    font-family: "KaiTi_GB2312", "KaiTi", "楷体", "STKaiti", serif;
+    font-size: 13px;
+    line-height: 1.9;
+}
+.npWhiteboard::placeholder { color: #AEBDB5; }
+
+/* 窗口变窄时自动退回单栏，保证编辑区可用 */
+@media (max-width: 860px) {
+    .npTopicPane, .npDirPane { display: none; }
+}
+
+/* ---------------- 左栏：本地文件夹树（笔记文件） ---------------- */
+#npTopicPane .npPaneHead { flex-wrap: wrap; row-gap: 6px; }
+#npTopicPane .npPaneTitle { flex: 0 0 auto; margin-right: 2px; }
+/* 计数标签占据剩余空间，使「选择 / ＋新增 / 刷新」三个按钮右对齐成一组 */
+#npTopicPane .npPaneMeta { margin-right: auto; }
+.npPaneBtnMain {
+    background: #2E6B5E;
+    border-color: #2E6B5E;
+    color: #FFFFFF;
+}
+.npPaneBtnMain:hover { background: #245549; border-color: #245549; color: #FFFFFF; }
+
+.npTreeList { padding: 8px 8px 14px; }
+
+.npLibRootRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 8px 7px;
+    margin-bottom: 6px;
+    border-bottom: 1px dashed #DCE7E0;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    color: #2C5B4D;
+    font-size: 12px;
+}
+.npLibRootIcon { font-size: 13px; flex: 0 0 auto; }
+.npLibRootName {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
+.npLibMiniBtn {
+    flex: 0 0 auto;
+    padding: 2px 7px;
+    border: 1px solid #CFDCD5;
+    border-radius: 4px;
+    background: #FFFFFF;
+    color: #3E6B5C;
+    font-size: 10.5px;
+    cursor: pointer;
+}
+.npLibMiniBtn:hover { background: #E7F1EA; }
+/* 「计数」标签：可点击，显示 笔记数 / 类别数 */
+.npCountBtn {
+    cursor: pointer;
+    padding: 1px 7px;
+    border-radius: 99px;
+    background: #E8F3ED;
+    color: #2E6B5E;
+    font-size: 10.5px;
+    font-weight: 600;
+    transition: background .15s, box-shadow .15s;
+}
+.npCountBtn:hover {
+    background: #D6EBE1;
+    box-shadow: 0 0 0 2px rgba(46, 107, 94, .16);
+}
+
+/* 计数浮窗 */
+.npCountPop {
+    position: fixed;
+    z-index: 2147483000;
+    min-width: 150px;
+    padding: 10px 12px;
+    background: #FFFFFF;
+    border: 1px solid #CFDCD5;
+    border-radius: 9px;
+    box-shadow: 0 12px 32px rgba(20, 50, 40, .22);
+    font: 12px/1.6 "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    color: #2A3A34;
+}
+.npCountPopTitle {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #2E6B5E;
+    margin-bottom: 6px;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #DDE8E2;
+}
+.npCountPopRow {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+}
+.npCountPopRow span { color: #6E7F76; }
+.npCountPopRow b {
+    font-size: 16px;
+    color: #21604F;
+    font-weight: 700;
+    line-height: 1.25;
+}
+.npCountPopRow .u { font-size: 10.5px; }
+.npCountPopTip {
+    margin-top: 6px;
+    font-size: 10.5px;
+    color: #93A8A0;
+}
+
+/* 栏头「文件夹图标 + 选择」按钮 */
+.npPaneBtnFolder {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding-left: 6px;
+}
+.npPaneBtnFolder .npFolderIco {
+    width: 13px;
+    height: 13px;
+    display: block;
+}
+/* 栏头刷新图标按钮 */
+.npPaneBtnIcon.npLibRefreshBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+}
+.npLibRefreshBtn svg { display: block; }
+.npLibRefreshBtn:hover svg { color: #245549; }
+
+/* 「选择」按钮悬停浮出的当前文件夹路径 */
+.npFolderTip {
+    position: fixed;
+    z-index: 2147483000;
+    max-width: 520px;
+    padding: 5px 9px;
+    background: #24463D;
+    color: #F2FAF6;
+    border-radius: 6px;
+    font: 11px/1.5 "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    box-shadow: 0 8px 22px rgba(20, 50, 40, .3);
+    word-break: break-all;
+    pointer-events: none;
+}
+
+/* 左栏右键子菜单（导出 html ▸） */
+.npLibCtx .npLibCtxHasSub { position: relative; }
+.npLibCtx .npLibCtxHasSub > .npLibCtxSub {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: -4px;
+    min-width: 106px;
+    padding: 4px 0;
+    background: #FFFFFF;
+    border: 1px solid #D5E3DA;
+    border-radius: 7px;
+    box-shadow: 0 10px 26px rgba(20, 50, 40, .2);
+    z-index: 2;
+}
+.npLibCtx .npLibCtxHasSub:hover > .npLibCtxSub { display: block; }
+.npLibCtx .npLibCtxArrow { margin-left: auto; font-size: 10px; color: #8AA29A; }
+
+.npLibSvcTag {
+    display: inline-block;
+    margin-left: 5px;
+    padding: 0 4px;
+    border-radius: 3px;
+    background: #E4F0EA;
+    color: #2E6B5E;
+    font-size: 9.5px;
+    font-style: normal;
+    font-weight: 500;
+    vertical-align: 1px;
+}
+
+.npTreeFolder,
+.npTreeFile {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 8px 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    font-size: 12.5px;
+    color: #24443A;
+    white-space: nowrap;
+    overflow: hidden;
+    user-select: none;
+}
+.npTreeFolder { color: #3E5C51; font-weight: 600; }
+.npTreeFolder:hover,
+.npTreeFile:hover { background: #EDF4F0; }
+.npTreeArrow {
+    flex: 0 0 auto;
+    width: 12px;
+    color: #7C978B;
+    font-size: 10px;
+}
+.npTreeCount {
+    flex: 0 0 auto;
+    margin-left: auto;
+    padding: 0 6px;
+    border-radius: 8px;
+    background: #EDF4F0;
+    color: #7C978B;
+    font-size: 10px;
+    font-weight: 400;
+}
+.npTreeIcon {
+    flex: 0 0 auto;
+    width: 15px;
+    height: 15px;
+    object-fit: contain;
+    vertical-align: -2px;
+}
+.npTreeName {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.npTreeExt {
+    flex: 0 0 auto;
+    color: #A3B4AC;
+    font-size: 10px;
+    font-family: Consolas, monospace;
+}
+.npTreeFile.active {
+    background: linear-gradient(135deg, #E4F0E9 0%, #D6E7DD 100%);
+    box-shadow: inset 2px 0 0 0 #2E6B5E;
+    color: #12362B;
+}
+
+/* 文件树：拖动移动笔记到其他文件夹 */
+.npTreeFile[draggable="true"] { cursor: grab; }
+.npTreeFolder.npTreeDropTarget,
+.npTreeFile.npTreeDropTarget {
+    background: #DCEBE2;
+    box-shadow: inset 0 0 0 1px #2E6B5E;
+}
+.npTreeFile.npTreeDragging { opacity: .45; }
+/* 同层拖动排序：上/下插入线 */
+.npTreeFolder.npTreeDropBefore, .npTreeFile.npTreeDropBefore { box-shadow: inset 0 2px 0 #2E9B78; }
+.npTreeFolder.npTreeDropAfter, .npTreeFile.npTreeDropAfter { box-shadow: inset 0 -2px 0 #2E9B78; }
+
+.npLibEmpty {
+    padding: 18px 12px;
+    color: #93A29A;
+    font-size: 12px;
+    line-height: 1.8;
+    text-align: center;
+}
+
+/* 未选择文件夹时的引导卡片 */
+.npLibPick {
+    margin: 14px 8px;
+    padding: 18px 14px;
+    border: 1px dashed #B8D6EE;
+    border-radius: 9px;
+    /* 浅天蓝同色系：与左栏底色、「数据文件」按钮一致 */
+    background: linear-gradient(180deg, #F8FCFF 0%, #E8F3FC 100%);
+    text-align: center;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+.npLibPickTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1B4A6E;
+    margin-bottom: 8px;
+    letter-spacing: .5px;
+}
+.npLibPickDesc {
+    font-size: 11.5px;
+    line-height: 1.7;
+    color: #64809A;
+    margin-bottom: 12px;
+}
+.npLibPickBtn {
+    padding: 6px 16px;
+    border: 1px solid #2E6B5E;
+    border-radius: 5px;
+    background: #2E6B5E;
+    color: #FFFFFF;
+    font-size: 12px;
+    cursor: pointer;
+}
+.npLibPickBtn:hover { background: #245549; }
+.npLibPickBtn[disabled] { opacity: .5; cursor: not-allowed; }
+.npLibPickBtn.ghost {
+    background: #FFFFFF;
+    color: #2E6B5E;
+}
+.npLibPickBtn.ghost:hover { background: #EDF4F0; }
+
+/* 新建 / 重命名 / 删除 的输入框弹窗 */
+.npLibModalMask {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    background: rgba(20, 34, 28, 0.32);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.npLibModal {
+    width: 340px;
+    max-width: 90vw;
+    padding: 18px 18px 14px;
+    border-radius: 10px;
+    background: #FFFFFF;
+    box-shadow: 0 12px 40px rgba(24, 46, 38, 0.28);
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+.npLibModalTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1E4034;
+    margin-bottom: 12px;
+}
+.npLibModalMsg {
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #4A6459;
+    margin-bottom: 14px;
+    word-break: break-all;
+}
+.npLibModalInput {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 10px;
+    border: 1px solid #C5D7CD;
+    border-radius: 5px;
+    font-size: 13px;
+    outline: none;
+    margin-bottom: 14px;
+}
+.npLibModalInput:focus { border-color: #2E6B5E; box-shadow: 0 0 0 2px rgba(46, 107, 94, .15); }
+.npLibModalBtns { display: flex; justify-content: flex-end; gap: 8px; }
+.npLibModalBtn {
+    padding: 6px 15px;
+    border: 1px solid #CFDCD5;
+    border-radius: 5px;
+    background: #FFFFFF;
+    color: #3E5C51;
+    font-size: 12px;
+    cursor: pointer;
+}
+.npLibModalBtn:hover { background: #F1F6F3; }
+.npLibModalBtn.primary {
+    background: #2E6B5E;
+    border-color: #2E6B5E;
+    color: #FFFFFF;
+}
+.npLibModalBtn.primary:hover { background: #245549; }
+.npLibModalBtn.danger { background: #B23A32; border-color: #B23A32; }
+.npLibModalBtn.danger:hover { background: #982E27; }
+.npLibModalAsk { max-width: 420px; }
+.npLibModalAsk .npLibModalMsg { line-height: 1.7; }
+/* 右侧编辑区底部状态行：未保存气泡 + 自动格式标签，居中排列 */
+.npEditorStatus {
+    position: absolute;
+    left: 50%;
+    bottom: 12px;
+    transform: translateX(-50%);
+    z-index: 8;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+    user-select: none;
+}
+/* 右侧编辑区「未保存」小标：随内容变动出现，保存后消失 */
+.npDirtyHint {
+    position: absolute;
+    left: 50%;
+    right: auto;
+    bottom: 12px;
+    top: auto;
+    transform: translateX(-50%);
+    z-index: 8;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 20px;
+    padding: 0 9px;
+    border: 1px solid #E0C089;
+    border-radius: 10px;
+    background: #FDF6E7;
+    color: #8A6116;
+    font-size: 11px;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+}
+.npDirtyDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #D89A2B;
+}
+.npEditorStatus .npDirtyHint {
+    position: static;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    transform: none;
+    z-index: auto;
+    border-color: #A9CFE8;
+    background: #EAF5FC;
+    color: #1D6A96;
+}
+.npEditorStatus .npDirtyDot { background: #2F8BC0; }
+.npAutoFmtHint {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 20px;
+    padding: 0 9px;
+    border: 1px solid #A9CFE8;
+    border-radius: 10px;
+    background: #EAF5FC;
+    color: #1D6A96;
+    font-size: 11px;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+}
+.npAutoFmtHint::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #2F8BC0;
+}
+/* 「显示全部笔记」行右侧的顺序 / 逆序 / 刷新 */
+.npDirAllTools {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+.npDirAllTools .npPaneBtn {
+    font-style: normal;
+    height: 20px;
+    padding: 0 6px;
+    font-size: 10.5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+.npDirAllTools .npPaneBtnIcon {
+    width: 20px;
+    padding: 0;
+}
+
+/* 保存按钮左侧的「导入」（蓝色）：html / mht / js / doc / docx 导入编辑区 */
+.npImportWrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+#notepadTitleRow .npImportBtn {
+    height: 26px;
+    padding: 0 12px;
+    border: 1px solid #2F80ED;
+    border-radius: 6px;
+    background: #2F80ED;
+    color: #FFFFFF;
+    font-size: 12px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(47,128,237,.28);
+    transition: background .15s, border-color .15s, box-shadow .15s;
+}
+#notepadPanel #notepadTitleRow .npImportBtn:hover,
+#notepadPanel #notepadTitleRow .npImportBtn:focus,
+#notepadPanel #notepadTitleRow .npImportBtn:active {
+    background: #1F6FDB;
+    border-color: #1F6FDB;
+    color: #FFFFFF;
+    box-shadow: 0 3px 12px rgba(47,128,237,.45);
+}
+
+/* 「导入」确认框（编辑区已有内容时先清空） */
+.npImportConfirm {
+    position: fixed;
+    inset: 0;
+    z-index: 30050;
+    background: rgba(18, 32, 26, .35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.npImportConfirmBox {
+    width: 380px;
+    max-width: 90vw;
+    padding: 18px 20px 14px;
+    background: #FFFFFF;
+    border-radius: 10px;
+    box-shadow: 0 18px 48px rgba(16, 40, 32, .28);
+}
+.npImportConfirmText {
+    font-size: 13px;
+    line-height: 1.9;
+    color: #2B3B34;
+}
+.npImportConfirmText b { color: #C0392B; }
+.npImportConfirmBtns {
+    margin-top: 14px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+.npImportConfirmBtns button {
+    height: 28px;
+    padding: 0 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1px solid #D3DFD8;
+    background: #FBFDFC;
+    color: #3A4C45;
+}
+.npImportConfirmBtns .npImportOk {
+    background: #2F80ED;
+    border-color: #2F80ED;
+    color: #FFFFFF;
+}
+.npImportConfirmBtns .npImportOk:hover { background: #1F6FDB; border-color: #1F6FDB; }
+.npImportConfirmBtns .npImportCancel:hover { background: #EEF4F1; border-color: #A9C2B6; }
+
+/* 「保存」：中间空半个字 + 外发光，和左侧蓝色导入、右侧绿色导出形成层次 */
+#notepadTitleRow .saveDropdownWrap .notepadSaveBtn {
+    letter-spacing: .5em;
+    padding-right: 10px;
+    padding-left: 16px;
+    box-shadow: 0 0 0 1px rgba(192,57,43,.12), 0 2px 10px rgba(192,57,43,.35);
+    transition: background .15s, box-shadow .2s;
+}
+#notepadTitleRow .saveDropdownWrap .notepadSaveBtn:hover {
+    box-shadow: 0 0 0 1px rgba(192,57,43,.22), 0 3px 16px rgba(192,57,43,.5);
+}
+
+/* 保存按钮右侧的「导出 ▾」（绿色） */
+.npExportWrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    /* 标题行有 gap:8px，这里用 -5px 抵消，最终与「保存」相距 3px */
+    margin-left: -5px;
+    flex: 0 0 auto;
+}
+
+/* 标题行右侧的「导出」：绿底白字，全文时置灰
+   注意：这个按钮同时带 .paDropdownBtn，style.css 里
+   #notepadPanel .paDropdownBtn:hover 有 color:#1565c0，优先级比普通两个类高。
+   所以这里必须用 #notepadPanel #notepadTitleRow ... 同级或更高选择器反压。 */
+
+#notepadTitleRow .npExportBtn {
+    padding: 0 12px;
+    height: 26px;
+    border: 1px solid #2AA05E;
+    border-radius: 6px;
+    background: #2AA05E;
+    color: #FFFFFF;
+    font-size: 12px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: background .15s, box-shadow .15s;
+}
+#notepadTitleRow .npExportBtn::after { display: none; }
+/* 鼠标滑过 / 按下 / 聚焦时文字必须仍是白色（浏览器默认按钮 hover 会改写 color） */
+#notepadPanel #notepadTitleRow .npExportBtn:hover:not(.npExportDisabled),
+#notepadPanel #notepadTitleRow .npExportBtn:focus:not(.npExportDisabled),
+#notepadPanel #notepadTitleRow .npExportBtn:active:not(.npExportDisabled),
+#notepadTitleRow .npExportBtn:hover:not(.npExportDisabled),
+#notepadTitleRow .npExportBtn:focus:not(.npExportDisabled),
+#notepadTitleRow .npExportBtn:active:not(.npExportDisabled) {
+    background: #22874F;
+    border-color: #22874F;
+    color: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(42,160,94,.35);
+}
+#notepadPanel #notepadTitleRow .npExportBtn span,
+#notepadTitleRow .npExportBtn:hover span,
+#notepadTitleRow .npExportBtn:focus span {
+    color: inherit;
+}
+#notepadTitleRow .npExportBtn.npExportDisabled,
+#notepadTitleRow .npExportBtn.npExportDisabled:hover {
+    background: #E6EBE8;
+    border-color: #D3DCD7;
+    color: #9AA9A1;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+.npExportMenu {
+    left: auto;
+    right: 0;
+    top: 100%;
+    min-width: 132px;
+}
+.npExportMenu .paDropdownItem { font-size: 12px; }
+.npExportMenu {
+    left: auto;
+    right: 0;
+    top: 100%;
+    min-width: 132px;
+}
+.npExportMenu .paDropdownItem { font-size: 12px; }
+
+/* ---------------- 编辑区工具条统一外观 ----------------
+   所有按钮同一高度 / 圆角 / 字号，下拉按钮右侧统一一个小箭头。 */
+#notepadToolbarStrip .paActionBtn,
+#notepadToolbarStrip .notepadSaveBtn {
+    height: 26px;
+    padding: 0 11px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
+}
+#notepadToolbarStrip .paActionBtn {
+    background: #FBFDFC;
+    border: 1px solid #D3DFD8;
+    color: #3A4C45;
+}
+#notepadToolbarStrip .paActionBtn:hover {
+    background: #EAF4EF;
+    border-color: #9FC0B1;
+    color: #1B5A4B;
+}
+#notepadToolbarStrip .paActionBtn.active {
+    background: #2E6B5E;
+    border-color: #2E6B5E;
+    color: #FFFFFF;
+    box-shadow: none;
+}
+#notepadToolbarStrip .paDropdownBtn { background: #FBFDFC; }
+#notepadToolbarStrip .paDropdownBtn:hover { background: #EAF4EF; }
+#notepadToolbarStrip .paDropdownBtn.active,
+#notepadToolbarStrip .paDropdownBtn.active:hover { background: #2E6B5E; }
+#notepadToolbarStrip .paDropdownBtn::after {
+    content: '';
+    width: 0;
+    height: 0;
+    border-left: 3.5px solid transparent;
+    border-right: 3.5px solid transparent;
+    border-top: 4px solid currentColor;
+    opacity: .55;
+    margin-left: 1px;
+}
+#notepadToolbarStrip .notepadFormatBtn {
+    background: #E6F5EC !important;
+    border-color: #A3D9B1 !important;
+    color: #1B5A4B;
+}
+#notepadToolbarStrip .notepadFormatBtn:hover {
+    background: #D6EEDF !important;
+    border-color: #7FC29A !important;
+}
+
+/* 中部标题栏右键：导出子菜单 */
+.npDirCtx .npDirCtxSub {
+    position: relative;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+.npDirCtx .npDirCtxSub:hover { background: #EBF3EE; color: #123F34; }
+.npDirCtx .npDirCtxSubMenu {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: -4px;
+    min-width: 120px;
+    padding: 4px;
+    background: #fff;
+    border: 1px solid #D8E3DD;
+    border-radius: 6px;
+    box-shadow: 0 8px 22px rgba(20, 50, 40, .16);
+}
+.npDirCtx .npDirCtxSub:hover > .npDirCtxSubMenu { display: block; }
+
+/* 左栏头部按钮组：强制一行，放不下就左右滑动 */
+#npTopicPane .npHeadNav {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    flex: 0 1 auto;
+    min-width: 0;
+    margin-left: 4px;
+}
+#npTopicPane .npHeadNavScroll {
+    display: flex;
+    align-items: stretch;
+    gap: 5px;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    white-space: nowrap;
+}
+#npTopicPane .npHeadNavScroll::-webkit-scrollbar { display: none; }
+#npTopicPane .npHeadNavScroll > .npPaneBtn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    box-sizing: border-box;
+}
+#npTopicPane .npNavEdge {
+    flex: 0 0 auto;
+    width: 15px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid #D3DFD8;
+    border-radius: 4px;
+    background: #FBFDFC;
+    color: #5D7A6E;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    display: none;
+}
+#npTopicPane .npHeadNav.npNavHasScroll .npNavEdge { display: inline-flex; align-items: center; justify-content: center; }
+#npTopicPane .npNavEdge:hover { background: #E7F1EA; color: #17453A; }
+#npTopicPane .npNavEdge:disabled { opacity: .32; cursor: default; }
+#npTopicPane .npHeadNavScroll { cursor: grab; }
+#npTopicPane .npHeadNavScroll:active { cursor: grabbing; }
+
+/* 「选择文件夹 / 输入路径」：上下排列且水平居中 */
+.npLibPickBtns {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+.npLibPickBtns .npLibPickBtn { margin-left: 0 !important; }
+
+/* ---------------- 高亮背景色的色块 ----------------
+   结构：.paCtxItem > span.paCtxBgSwatch + span(文字)
+   字体与菜单一致用黑体，色块尺寸崩了就会看不出颜色。 */
+#npEditorCtxMenu .paCtxBgSwatch {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    vertical-align: middle;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .55);
+}
+#npEditorCtxMenu .paCtxItem {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    font-size: 14px;
+}
+#npEditorCtxMenu .paCtxItem > span:first-child { flex: 1 1 auto; white-space: nowrap; }
+#npEditorCtxMenu .paCtxItem .paCtxArrow {
+    flex: 0 0 auto;
+    width: 14px;
+    min-width: 14px;
+    margin-left: 14px;
+    text-align: right;
+    white-space: nowrap;
+    overflow: visible;
+    font-size: 12px;
+    line-height: 1;
+    color: #8A9BA8;
+}
+#npEditorCtxMenu .paCtxSubmenu .paCtxItem { padding: 8px 16px; }
+/* 二级子菜单越界内收由 JS 的 fitSubmenus() 用内联 left/right/top 完成，
+   这里只需保证子菜单不会画出屏幕（极端情况下允许自身滚动）。 */
+#npEditorCtxMenu .paCtxSubmenu { max-height: calc(100vh - 12px); }
+/* 高亮子项右侧的快捷键提示 */
+#npEditorCtxMenu .paCtxKbd {
+    flex: 0 0 auto;
+    margin-left: 18px;
+    color: #93A7B2;
+    font-size: 11px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    white-space: nowrap;
+}
+#npEditorCtxMenu .paCtxItem:hover .paCtxKbd { color: #4F7C99; }
+
+/* ---------------- 插入符号面板（自定义 / 圈圈 / 括弧 三页签） ---------------- */
+.npSymbolPanel {
+    display: none;
+    position: fixed;
+    z-index: 10200;
+    width: 420px;
+    padding: 14px 16px 12px;
+    background: #F7FBFD;
+    border: 1px solid #C9DCE8;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(22, 57, 92, .22);
+    font-family: 'SimHei', '黑体', sans-serif;
+    box-sizing: border-box;
+}
+.npSymbolPanel.show { display: block; }
+.npSymbolPanel .npSymbolClose {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #93A9B8;
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+}
+.npSymbolPanel .npSymbolClose:hover { background: #E4EEF5; color: #34505F; }
+
+.npSymbolPanel .npSymbolTabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-right: 26px;
+}
+.npSymbolPanel .npSymbolTab {
+    flex: 1;
+    padding: 7px 0;
+    border: 1px solid #D3E1EC;
+    border-radius: 6px;
+    background: #FFFFFF;
+    color: #35505F;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+.npSymbolPanel .npSymbolTab:hover { background: #EDF5FA; border-color: #B7D2E3; }
+.npSymbolPanel .npSymbolTab.active {
+    background: #5F7FE0;
+    border-color: #4E6CD2;
+    color: #FFFFFF;
+    font-weight: bold;
+}
+
+.npSymbolPanel .npSymbolGrid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    max-height: 158px;
+    overflow-y: auto;
+    padding: 2px;
+}
+.npSymbolPanel .npSymbolItemWrap { position: relative; display: flex; }
+.npSymbolPanel .npSymbolItem {
+    flex: 1;
+    height: 42px;
+    padding: 0 4px;
+    border: 1px solid #D8E3EC;
+    border-radius: 6px;
+    background: #FFFFFF;
+    color: #22333F;
+    font-size: 19px;
+    line-height: 1;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.npSymbolPanel .npSymbolItem:hover { background: #EAF3FA; border-color: #A9C8DE; }
+.npSymbolPanel .npSymbolDel {
+    display: none;
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 17px;
+    height: 17px;
+    padding: 0;
+    border: 1px solid #F2B8B5;
+    border-radius: 50%;
+    background: #FFFFFF;
+    color: #D0504B;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 2;
+}
+.npSymbolPanel.editing .npSymbolDel { display: block; }
+.npSymbolPanel .npSymbolDel:hover { background: #FDECEA; }
+.npSymbolPanel .npSymbolEmpty {
+    grid-column: 1 / -1;
+    padding: 14px 4px;
+    color: #93A9B8;
+    font-size: 13px;
+    text-align: center;
+}
+
+.npSymbolPanel .npSymbolBottom {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+.npSymbolPanel .npSymbolCustom { display: none; flex: 1; gap: 6px; min-width: 0; }
+.npSymbolPanel.editing .npSymbolCustom { display: flex; }
+.npSymbolPanel .npSymbolCustom input {
+    flex: 1;
+    min-width: 0;
+    height: 30px;
+    padding: 0 9px;
+    border: 1px solid #C9DCE8;
+    border-radius: 6px;
+    background: #FFFFFF;
+    font-family: inherit;
+    font-size: 14px;
+}
+.npSymbolPanel .npSymbolCustom input:focus { outline: none; border-color: #5F7FE0; }
+.npSymbolPanel .npSymbolBottom button {
+    height: 30px;
+    padding: 0 14px;
+    border: 1px solid #D3E1EC;
+    border-radius: 6px;
+    background: #FFFFFF;
+    color: #35505F;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+.npSymbolPanel .npSymbolBottom button:hover { background: #EDF5FA; border-color: #B7D2E3; }
+.npSymbolPanel .npSymbolEditBtn.active { background: #5F7FE0; border-color: #4E6CD2; color: #FFFFFF; }
+
+/* ---------------- 替换窗口（单组） ---------------- */
+.npReplaceDialog {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10600;
+    background: rgba(18, 34, 45, .28);
+    font-family: 'SimHei', '黑体', sans-serif;
+}
+.npReplaceDialog.show { display: flex; align-items: flex-start; justify-content: center; padding-top: 12vh; }
+.npReplaceDialog .npRplBox {
+    width: 560px;
+    max-width: calc(100vw - 40px);
+    padding: 18px 22px 16px;
+    background: linear-gradient(180deg, #FBFDFF 0%, #EEF6FB 100%);
+    border: 1px solid #C9DCE8;
+    border-radius: 10px;
+    box-shadow: 0 16px 44px rgba(22, 57, 92, .28);
+    box-sizing: border-box;
+}
+.npReplaceDialog .npRplHead {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+.npReplaceDialog .npRplHeadText {
+    font-size: 16px;
+    font-weight: bold;
+    color: #223A4A;
+    letter-spacing: 1px;
+}
+.npReplaceDialog .npRplClose {
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #93A9B8;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+.npReplaceDialog .npRplClose:hover { background: #DCEAF3; color: #2C4452; }
+.npReplaceDialog .npRplRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.npReplaceDialog .npRplLabel {
+    flex: 0 0 54px;
+    color: #4A6273;
+    font-size: 14px;
+    text-align: right;
+}
+.npReplaceDialog .npRplRow input {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 34px;
+    padding: 0 11px;
+    border: 1px solid #C9DCE8;
+    border-radius: 6px;
+    background: #FFFFFF;
+    color: #22333F;
+    font-family: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+.npReplaceDialog .npRplRow input:focus { outline: none; border-color: #5F7FE0; box-shadow: 0 0 0 2px rgba(95, 127, 224, .16); }
+.npReplaceDialog .npRplFindWrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.npReplaceDialog .npRplFindWrap input { padding-right: 42px; }
+.npReplaceDialog .npRplCount {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    min-width: 22px;
+    height: 20px;
+    padding: 0 7px;
+    border: none;
+    border-radius: 10px;
+    background: #C0392B;
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 20px;
+    text-align: center;
+    cursor: default;
+    opacity: 0;
+    pointer-events: none;
+}
+.npReplaceDialog .npRplCount.show { opacity: 1; }
+.npReplaceDialog .npRplResult {
+    max-height: 34vh;
+    margin: 2px 0 8px 64px;
+    padding-top: 6px;
+    border-top: 1px solid #DCE8F0;
+    overflow-y: auto;
+    font-size: 12.5px;
+    color: #33475A;
+}
+.npReplaceDialog .npRplResultTotal {
+    margin-bottom: 5px;
+    color: #B03A2E;
+    font-weight: 700;
+    font-size: 12px;
+}
+.npReplaceDialog .npRplResultEmpty { color: #8A9BA8; font-size: 12px; }
+.npReplaceDialog .npRplResultSentList { display: flex; flex-direction: column; gap: 4px; }
+.npReplaceDialog .npRplOccLine {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 4px 6px;
+    border-radius: 5px;
+    cursor: pointer;
+    line-height: 1.55;
+}
+.npReplaceDialog .npRplOccLine:hover { background: #EAF3FB; }
+.npReplaceDialog .npRplOccSent { flex: 1 1 auto; min-width: 0; }
+.npReplaceDialog .npRplSentKw { color: #1565C0; font-weight: 700; }
+.npReplaceDialog .npRplSentKwReplaced { color: #C0392B; font-weight: 700; }
+.npReplaceDialog .npRplOccDone {
+    flex: 0 0 auto;
+    color: #2E7D5B;
+    font-size: 10.5px;
+    background: #E5F5EC;
+    border-radius: 8px;
+    padding: 0 6px;
+}
+.npReplaceDialog .npRplHL { background: #FFE082; border-radius: 2px; }
+.npReplaceDialog .npRplHint {
+    min-height: 18px;
+    margin: 2px 0 6px 64px;
+    color: #5C7A8C;
+    font-size: 12px;
+}
+.npReplaceDialog .npRplBtns {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+}
+.npReplaceDialog .npRplBtns button {
+    height: 32px;
+    padding: 0 18px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+.npReplaceDialog .npRplRunBtn {
+    border: 1px solid #2E6B5E;
+    background: #2E6B5E;
+    color: #FFFFFF;
+}
+.npReplaceDialog .npRplRunBtn:hover { background: #245649; border-color: #245649; }
+.npReplaceDialog .npRplCancelBtn {
+    border: 1px solid #D3E1EC;
+    background: #FFFFFF;
+    color: #35505F;
+}
+.npReplaceDialog .npRplCancelBtn:hover { background: #EDF5FA; border-color: #B7D2E3; }
+
+/* ---------------- 预览栏「笔记」页：全文检索 + 多关键字高亮 ---------------- */
+/* 顶部：检索输入框 + 检索按钮（替代原来的类别下拉与「收起」） */
+.npPrevSearchWrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+/* 关键字 + 实心圆数量（浮在检索框正下方，颜色 = 该组高亮色） */
+.npPrevTerms {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 5px);
+    z-index: 14;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    max-width: 100%;
+    padding: 4px 6px;
+    border: 1px solid #E3DBF2;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 4px 14px rgba(76, 54, 122, 0.16);
+    pointer-events: none;
+}
+.npPrevTerms[hidden] { display: none !important; }
+.npSearchTerm {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 18px;
+    max-width: 150px;
+    padding: 0 2px 0 6px;
+    border-radius: 9px;
+    background: #F7F3FD;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    font-size: 10.5px;
+    color: #5E517E;
+    white-space: nowrap;
+}
+.npSearchTermText {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.npSearchDot {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 3px;
+    border-radius: 9px;
+    font-size: 9.5px;
+    font-weight: 700;
+    line-height: 16px;
+    color: #241D00;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+.npSearchDot0 { background: #FFE082; }
+.npSearchDot1 { background: #90CAF9; color: #062234; }
+.npSearchDot2 { background: #FF8A80; color: #3A0B06; }
+.npSearchDot3 { background: #A5D6A7; color: #06280C; }
+.npSearchDot4 { background: #CE93D8; color: #2B0B33; }
+.npPrevSearchInput {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 26px;
+    padding: 0 8px;
+    border: 1px solid #D8D2EA;
+    border-radius: 4px;
+    background: #FDFCFF;
+    color: #2C3E50;
+    font-size: 12px;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    outline: none;
+}
+.npPrevSearchInput::placeholder { color: #A29BB8; }
+.npPrevSearchInput:focus {
+    border-color: #A99BD6;
+    box-shadow: 0 0 0 2px rgba(160, 142, 214, .16);
+}
+.npPrevSearchBtn {
+    flex: 0 0 auto;
+    height: 26px;
+    padding: 0 10px;
+    border: 1px solid #6B5AA8;
+    border-radius: 4px;
+    background: #6B5AA8;
+    color: #FFFFFF;
+    font-size: 12px;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    cursor: pointer;
+}
+.npPrevSearchBtn:hover { background: #5B4B93; border-color: #5B4B93; }
+.npPrevLegend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 9px;
+    margin-left: auto;
+    justify-content: flex-end;
+}
+.npPrevLegendItem {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 132px;
+    font-size: 10.5px;
+    color: #7A6F9B;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+.npPrevLegendItem b {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.npPrevDot { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+.npPrevDot0 { background: #FFE082; }
+.npPrevDot1 { background: #90CAF9; }
+.npPrevDot2 { background: #FF8A80; }
+.npPrevDot3 { background: #A5D6A7; }
+.npPrevDot4 { background: #CE93D8; }
+
+/* 命中树 + 只读正文：左右分栏（左边独立成卡片，右边投影分开） */
+.npPvSplit {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    gap: 12px;
+    padding: 10px 12px 14px;
+}
+.npPvResTree {
+    flex: 0 0 36%;
+    min-width: 142px;
+    max-width: 58%;
+    overflow: auto;
+    padding: 6px;
+    border: 1px solid #E9E2F6;
+    border-radius: 8px;
+    background: #FFFFFF;
+    /* 向右投一层影，把列表和正文分开 */
+    box-shadow: 0 2px 10px rgba(72, 52, 118, .07),
+                8px 0 18px -8px rgba(72, 52, 118, .22);
+}
+.npPvSplit .npPrevDoc {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 12px 16px 16px;
+    border: 1px solid #EFEAF9;
+    border-radius: 8px;
+    background: #FFFFFF;
+    box-shadow: 0 1px 8px rgba(72, 52, 118, .05);
+}
+/* 浏览列表复用「数据」栏的行样式，配色改成预览栏的浅紫 */
+.npPvResTree .npTreeList { padding: 2px 2px 8px; }
+.npPvResTree .npTreeFolder:hover,
+.npPvResTree .npTreeFile:hover { background: #F1ECFA; }
+.npPvResTree .npTreeCount { background: #F0EBFA; color: #8B7FB0; }
+.npPvResTree .npTreeFile.active {
+    background: linear-gradient(135deg, #EFE9FB 0%, #E3DAF6 100%);
+    box-shadow: inset 2px 0 0 0 #6B5AA8;
+    color: #3D2F6B;
+}
+.npPvFolderRow,
+.npPvItem {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    padding: 3px 5px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    text-align: left;
+    font-size: 11.5px;
+    color: #4A4358;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    cursor: pointer;
+}
+.npPvFolderRow { font-weight: 600; margin-top: 2px; }
+.npPvFolderRow:hover,
+.npPvItem:hover { background: #F1ECFA; }
+.npPvItem { padding-left: 20px; flex-wrap: wrap; }
+.npPvItem.on { background: #E8E1F7; color: #3D2F6B; }
+.npPvFolderRow img,
+.npPvItem img { width: 13px; height: 13px; flex: none; object-fit: contain; }
+.npPvFolderRow .nm,
+.npPvItem .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.npPvFolderRow em,
+.npPvItem em {
+    margin-left: auto;
+    padding-left: 6px;
+    font-style: normal;
+    font-size: 10px;
+    color: #8B7FB0;
+    flex: none;
+}
+.npPvItem .sn {
+    flex: 1 1 100%;
+    margin-left: 18px;
+    font-size: 10.5px;
+    line-height: 1.5;
+    color: #7E7793;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.npPvArrow { width: 10px; flex: none; font-size: 9px; color: #9C93B4; }
+.npPvEmpty {
+    padding: 18px 12px;
+    color: #938BB0;
+    font-size: 11.5px;
+    line-height: 1.7;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+.npPvEmpty code {
+    padding: 0 3px;
+    border-radius: 3px;
+    background: #EEE8F8;
+    color: #5B4B93;
+}
+
+/* 关键字色块：与 10--谈话助手 预览区同一套配色 */
+.npPvHl {
+    padding: 0 1px;
+    border-radius: 2px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+.npPvHl0 { background: #FFE082; color: #241D00; }
+.npPvHl1 { background: #90CAF9; color: #062234; }
+.npPvHl2 { background: #FF8A80; color: #3A0B06; }
+.npPvHl3 { background: #A5D6A7; color: #06280C; }
+.npPvHl4 { background: #CE93D8; color: #2B0B33; }
+
+/* ================= 多窗预览（5 个小窗，同参考资料栏位置） ================= */
+.npMultiView {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--npPrevW, 50%);
+    display: none;
+    flex-direction: column;
+    min-height: 0;
+    z-index: 30;
+    background: linear-gradient(180deg, #FBFBFE 0%, #F2EFFA 100%);
+    border-right: 1px solid #E4DFF0;
+    box-shadow: 10px 0 26px rgba(60, 45, 110, .14);
+}
+.npMultiView.show { display: flex; }
+.npMvHead {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E9E3F3;
+}
+.npMvTabs { display: flex; align-items: center; gap: 5px; flex: 0 0 auto; }
+.npMvTab {
+    position: relative;
+    width: 30px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, .5);
+    border-radius: 8px;
+    color: #FFFFFF;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    opacity: .62;
+    transition: opacity .15s, transform .15s, box-shadow .15s;
+    touch-action: none;
+}
+.npMvTab:hover { opacity: .9; transform: translateY(-1px); }
+.npMvTab.active {
+    opacity: 1;
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 2px #FFFFFF, 0 3px 9px rgba(70, 50, 120, .28);
+}
+.npMvTab.linked::after {
+    content: "";
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .12);
+}
+.npMvTab.off { opacity: .3; filter: grayscale(.5); }
+.npMvTab.dragging { opacity: .25; }
+.npMvTab.drop-before::before,
+.npMvTab.drop-after::before {
+    content: "";
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 3px;
+    border-radius: 2px;
+    background: #7C5FC4;
+}
+.npMvTab.drop-before::before { left: -4px; }
+.npMvTab.drop-after::before { right: -4px; }
+.npMvTabC0 { background: linear-gradient(180deg, #D9534F 0%, #A93226 100%); }
+.npMvTabC1 { background: linear-gradient(180deg, #3E8FC4 0%, #1F5F8B 100%); }
+.npMvTabC2 { background: linear-gradient(180deg, #37A96B 0%, #177A45 100%); }
+.npMvTabC3 { background: linear-gradient(180deg, #D49A2E 0%, #9A6A0B 100%); }
+.npMvTabC4 { background: linear-gradient(180deg, #9B6BC0 0%, #633A86 100%); }
+
+.npMvCurTitle {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 11.5px;
+    color: #5B4F74;
+}
+.npMvOps { flex: 0 0 auto; display: flex; align-items: center; gap: 5px; }
+.npMvOpBtn {
+    height: 24px;
+    padding: 0 9px;
+    border: 1px solid #DDD3EE;
+    border-radius: 6px;
+    background: #FBF9FF;
+    color: #5A4A78;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 11.5px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.npMvOpBtn:hover { background: #F3EDFC; border-color: #C7B7E4; }
+.npMvOpBtn.active {
+    background: linear-gradient(180deg, #8E74D6 0%, #6349B4 100%);
+    border-color: #B7A4EC;
+    color: #FFFFFF;
+    box-shadow: 0 2px 7px rgba(100, 76, 180, .34);
+}
+.npMvClose { width: 24px; padding: 0; font-size: 14px; line-height: 20px; }
+
+.npMvBody {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: stretch;
+    padding: 9px 10px 11px;
+    gap: 0;
+}
+.npMvWin {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 0;
+    border: 1px solid rgba(120, 100, 160, .18);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(60, 45, 110, .10);
+}
+.npMvBody.npMvTiling .npMvWin { min-width: 120px; flex: 1 1 0; }
+.npMvWinHead {
+    flex: 0 0 auto;
+    height: 27px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 5px 0 9px;
+    background: rgba(255, 255, 255, .62);
+    border-bottom: 1px solid rgba(90, 70, 130, .10);
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 11px;
+    color: #4E4168;
+}
+.npMvWinDot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+.npMvWinName { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.npMvWinMemo {
+    flex: 0 1 auto;
+    max-width: 38%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #8A7CA8;
+    font-size: 10.5px;
+}
+.npMvWinClose {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: #6E5F8C;
+    font-size: 14px;
+    line-height: 18px;
+    cursor: pointer;
+}
+.npMvWinClose:hover { background: rgba(177, 62, 62, .14); color: #A93226; }
+
+.npMvDotC0 { background: #C0392B; }
+.npMvDotC1 { background: #2471A3; }
+.npMvDotC2 { background: #1E8449; }
+.npMvDotC3 { background: #B9770E; }
+.npMvDotC4 { background: #6C3483; }
+.npMvBg0 { background: linear-gradient(180deg, #FDF3F1 0%, #F9E7E3 100%); }
+.npMvBg1 { background: linear-gradient(180deg, #F0F7FC 0%, #E1EEF8 100%); }
+.npMvBg2 { background: linear-gradient(180deg, #F1FAF5 0%, #E2F3EA 100%); }
+.npMvBg3 { background: linear-gradient(180deg, #FDF7EC 0%, #F8EBD3 100%); }
+.npMvBg4 { background: linear-gradient(180deg, #F7F1FB 0%, #EDE3F5 100%); }
+
+.npMvDoc { position: relative; flex: 1; min-height: 0; overflow: auto; }
+.npMvDocInner {
+    min-height: 100%;
+    padding: 10px 13px 44px;
+    box-sizing: border-box;
+    font-family: "Microsoft YaHei", "SimSun", sans-serif;
+    font-size: 13px;
+    line-height: 1.85;
+    color: #22272E;
+}
+.npMvDocInner::after { content: ""; display: block; clear: both; }
+/* 多窗预览里可以选中文字（只读标记用，不改文件） */
+.npMvDocInner { user-select: text; -webkit-user-select: text; }
+.npMvMark { border-radius: 2px; padding: 0 1px; }
+.npMvNoteBody p { margin: .25em 0 .55em; }
+.npMvNoteBody img { max-width: 100%; height: auto; }
+.npMvNoteBody table { max-width: 100%; border-collapse: collapse; }
+.npMvNoteFrom {
+    margin: 0 0 8px;
+    color: #8A7CA8;
+    font-size: 11px;
+    font-family: "Microsoft YaHei", sans-serif;
+}
+.npMvEmptyInline { padding: 16px; color: #7A6E90; font-size: 12px; }
+.npMvLoading { padding: 16px; color: #7A6E90; font-size: 12px; }
+.npMvDocInner .npFvFileHead {
+    margin: -10px -13px 8px;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, .6);
+    border-bottom: 1px solid rgba(90, 70, 130, .10);
+    font-size: 11px;
+    color: #5D4F78;
+}
+.npMvDocInner .npFvFileBody { padding: 0 0 12px; }
+.npMvDocInner .npFvPre { font-size: 12px; line-height: 1.7; }
+.npMvDocInner .npFvEmpty { padding: 16px; }
+.npMvDocInner .npFvImg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.npMvDocInner .npFvFrame { width: 100%; height: 100%; min-height: 320px; border: 0; background: #fff; }
+.npMvDocInner .npFvFileBody.npMvPdfBody { height: calc(100vh - 220px); min-height: 260px; }
+
+.npMvHl {
+    background: #FFE082; color: #241D00; border-radius: 2px;
+}
+.npMvHl.npMvHl0 { background: #FFE082; color: #241D00; }
+.npMvHl.npMvHl1 { background: #90CAF9; color: #062234; }
+.npMvHl.npMvHl2 { background: #FF8A80; color: #3A0B06; }
+.npMvHl.npMvHl3 { background: #A5D6A7; color: #06280C; }
+.npMvHl.npMvHl4 { background: #CE93D8; color: #2B0B33; }
+
+.npMvTools {
+    position: absolute;
+    right: 8px;
+    bottom: 7px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    padding: 2px 4px;
+    border: 1px solid rgba(100, 80, 140, .12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .86);
+    box-shadow: 0 2px 8px rgba(40, 28, 70, .12);
+    opacity: .55;
+    transition: opacity .15s;
+}
+.npMvWin:hover .npMvTools { opacity: 1; }
+.npMvTool {
+    height: 20px;
+    min-width: 20px;
+    padding: 0 4px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: #3A4A57;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+}
+.npMvTool:hover { background: #EDE7F8; }
+.npMvZoomLabel { min-width: 38px; color: #5B4F74; font-size: 11px; }
+
+.npMvFind {
+    position: absolute;
+    left: auto;
+    right: 8px;
+    bottom: 36px;
+    z-index: 6;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    width: min(286px, calc(100% - 16px));
+    padding: 5px 6px;
+    border: 1px solid #DED4F0;
+    border-radius: 8px;
+    background: #FFFFFF;
+    box-shadow: 0 6px 18px rgba(50, 35, 90, .18);
+    box-sizing: border-box;
+}
+.npMvFind[hidden] { display: none; }
+.npMvFindInput {
+    flex: 1;
+    min-width: 0;
+    height: 22px;
+    padding: 0 6px;
+    border: 1px solid #E2DAF0;
+    border-radius: 5px;
+    background: #FCFBFF;
+    color: #333;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 11.5px;
+    outline: none;
+}
+.npMvFindInput:focus { border-color: #B7A4E4; background: #fff; }
+.npMvFindInput::placeholder { color: #B3A9C6; font-size: 11px; }
+.npMvTerms {
+    flex: 1 1 100%;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 2px 1px 0;
+}
+.npMvTerms[hidden] { display: none !important; }
+.npMvFindCount {
+    flex: 0 0 auto;
+    color: #7A6E90;
+    font-size: 10.5px;
+    white-space: nowrap;
+}
+.npMvFindGrip {
+    flex: 0 0 auto;
+    color: #B7A4E4;
+    font-size: 12px;
+    line-height: 18px;
+    letter-spacing: -2px;
+    cursor: move;
+    user-select: none;
+}
+.npMvFindCancel {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #7A6E90;
+    font-size: 13px;
+    line-height: 16px;
+    cursor: pointer;
+}
+.npMvFindCancel:hover { background: #F0EAF8; color: #A93226; }
+.npMvFindActions {
+    flex: 1 1 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    padding-top: 2px;
+}
+.npMvFindActions button {
+    height: 20px;
+    padding: 0 9px;
+    border: 1px solid #DED4F0;
+    border-radius: 5px;
+    background: #FAF8FE;
+    color: #5B4F74;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 10.5px;
+    cursor: pointer;
+}
+.npMvFindActions button:hover { background: #F0EAF8; border-color: #C9B8E8; }
+.npMvFindActions .npMvFindClose:hover { background: #FDF3F1; border-color: #E7BDB8; color: #A93226; }
+.npMvTerms .npSearchTerm { cursor: pointer; }
+.npMvTerms .npSearchTerm:hover { background: #EFE7FA; }
+
+.npMvDiv {
+    flex: 0 0 4px;
+    position: relative;
+    cursor: col-resize;
+    touch-action: none;
+}
+.npMvDiv::before {
+    content: "";
+    position: absolute;
+    left: 1.5px;
+    top: 4px;
+    bottom: 4px;
+    width: 1px;
+    background: transparent;
+    transition: background .12s;
+}
+.npMvDiv:hover::before,
+.npMvDiv.dragging::before {
+    background: #8B7BC0;
+    box-shadow: 0 0 0 1px rgba(139, 123, 192, .3);
+}
+body.npMvDivDragging { cursor: col-resize !important; user-select: none; }
+body.npMvDivDragging * { cursor: col-resize !important; }
+
+.npMvEmpty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 22px;
+    text-align: center;
+    font-family: "Microsoft YaHei", sans-serif;
+    color: #7A6E90;
+}
+.npMvEmptyTitle { font-size: 13px; color: #5B4F74; font-weight: 600; }
+.npMvEmptyHint { font-size: 11.5px; line-height: 1.8; max-width: 420px; }
+.npMvEmptyPick {
+    height: 26px;
+    padding: 0 12px;
+    border: 1px solid #C9B8E8;
+    border-radius: 7px;
+    background: #FFFFFF;
+    color: #5B4F74;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+}
+.npMvEmptyPick:hover { background: #F4EEFC; }
+
+.npMvPicker {
+    position: absolute;
+    top: 44px;
+    right: 10px;
+    z-index: 12;
+    width: min(320px, calc(100% - 20px));
+    max-height: calc(100% - 60px);
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    border: 1px solid #DDD3EE;
+    border-radius: 10px;
+    background: #FFFFFF;
+    box-shadow: 0 12px 30px rgba(45, 30, 90, .22);
+}
+.npMvPicker[hidden] { display: none; }
+.npMvPickerHead {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 2px 6px;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 12px;
+    color: #4E4168;
+}
+.npMvPickerTitle { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.npMvPickerBtn {
+    height: 22px;
+    padding: 0 7px;
+    border: 1px solid #E0D8EF;
+    border-radius: 6px;
+    background: #FBF9FF;
+    color: #5B4F74;
+    font-size: 11px;
+    cursor: pointer;
+}
+.npMvPickerBtn:hover { background: #F2ECFB; }
+.npMvPickerInput {
+    height: 26px;
+    margin-bottom: 6px;
+    padding: 0 8px;
+    border: 1px solid #E2DAF0;
+    border-radius: 6px;
+    background: #FCFBFF;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 12px;
+    outline: none;
+}
+.npMvPickerInput:focus { border-color: #B7A4E4; background: #fff; }
+.npMvPickerList { flex: 1; min-height: 60px; max-height: 320px; overflow: auto; }
+.npMvPickRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #3B3348;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+}
+.npMvPickRow:hover { background: #F5F0FC; }
+.npMvPickRow.cur { background: #EFE8FA; }
+.npMvPickName { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.npMvPickFolder { flex: 0 1 45%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #9A8DB4; font-size: 10.5px; }
+.npMvPickEmpty { padding: 14px 10px; color: #8A7CA8; font-size: 12px; text-align: center; }
+
+.npMvTip {
+    position: fixed;
+    z-index: 95;
+    max-width: 280px;
+    padding: 6px 9px;
+    border: 1px solid rgba(140, 120, 180, .28);
+    border-radius: 7px;
+    background: rgba(38, 30, 60, .94);
+    box-shadow: 0 8px 22px rgba(20, 12, 40, .3);
+    color: #F2ECFA;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 11.5px;
+    line-height: 1.7;
+    pointer-events: none;
+}
+.npMvTip[hidden] { display: none; }
+.npMvTipTitle { color: #FFFFFF; font-weight: 600; }
+.npMvTipLine { color: #D9CBEF; }
+
+.npMvCtx {
+    position: fixed;
+    z-index: 94;
+    min-width: 186px;
+    padding: 4px;
+    border: 1px solid #DDD3EE;
+    border-radius: 9px;
+    background: #FFFFFF;
+    box-shadow: 0 12px 28px rgba(45, 30, 90, .24);
+}
+.npMvCtxHead {
+    padding: 5px 9px 6px;
+    color: #8A7CA8;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 10.5px;
+    letter-spacing: .5px;
+}
+.npMvCtxItem {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    width: 100%;
+    padding: 6px 9px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #3B3348;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+}
+.npMvCtxItem:hover { background: #F3EDFC; }
+.npMvCtxDanger {
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid #F1EAF8;
+    border-radius: 0 0 6px 6px;
+    color: #A93226;
+}
+.npMvCtxDanger:hover { background: #FDF3F1; }
+.npMvCtxDot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.npMvCtxSwatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.12); flex: 0 0 auto; }
+.npMvCtxKey { margin-left: auto; padding-left: 10px; color: #9A8DB4; font-size: 10.5px; white-space: nowrap; }
+.npMvCtxName { flex: 0 0 auto; }
+.npMvCtxTick {
+    flex: 0 0 auto;
+    width: 12px;
+    color: #1F9D63;
+    font-weight: 700;
+    text-align: center;
+}
+.npMvCtxNow { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #9A8DB4; font-size: 10.5px; text-align: right; }
+
+.npMvMemoMask {
+    position: fixed;
+    inset: 0;
+    z-index: 96;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(24, 18, 42, .42);
+}
+.npMvMemoMask[hidden] { display: none; }
+.npMvMemoBox {
+    width: 380px;
+    max-width: calc(100vw - 32px);
+    padding: 12px 14px 12px;
+    border-radius: 12px;
+    background: #FFFFFF;
+    box-shadow: 0 18px 46px rgba(25, 16, 48, .34);
+}
+.npMvMemoHead { padding-bottom: 8px; }
+.npMvMemoTitle { font-family: "Microsoft YaHei", sans-serif; font-size: 13px; font-weight: 600; color: #3B3348; }
+.npMvMemoInput {
+    width: 100%;
+    min-height: 84px;
+    padding: 8px 9px;
+    border: 1px solid #DED4F0;
+    border-radius: 7px;
+    background: #FCFBFF;
+    color: #2F2A3A;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 12.5px;
+    line-height: 1.7;
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+}
+.npMvMemoInput:focus { border-color: #B7A4E4; background: #fff; }
+.npMvMemoBtns { display: flex; align-items: center; gap: 6px; padding-top: 9px; }
+.npMvMemoSpacer { flex: 1; }
+.npMvMemoBtn {
+    height: 26px;
+    padding: 0 11px;
+    border: 1px solid #DDD3EE;
+    border-radius: 7px;
+    background: #FBF9FF;
+    color: #5B4F74;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+}
+.npMvMemoBtn:hover { background: #F2ECFB; }
+.npMvMemoBtn.primary {
+    border-color: #8E74D6;
+    background: linear-gradient(180deg, #8E74D6 0%, #6349B4 100%);
+    color: #FFFFFF;
+}
+.npMvMemoBtn.primary:hover { filter: brightness(1.06); }
+.npMvMemoBtn.npMvMemoWarn { color: #A93226; border-color: #EAC6C1; background: #FDF6F5; }
+.npMvMemoBtn.npMvMemoClose { width: 26px; padding: 0; font-size: 14px; }/* ===== 2026-11-07 参考资料：文章列表 / 本地左右分栏 / 附件缩放条 ===== */
+.npFvBody {
+    flex-direction: row;
+    border-top: 1px solid #EDF1EE;
+}
+.npFvTree {
+    flex: 0 0 36%;
+    max-width: 58%;
+    border-right: 1px solid #EDF1EE;
+}
+.npFvView {
+    flex: 1 1 auto;
+}
+.npPvSplit {
+    padding: 4px 10px 10px;
+    gap: 10px;
+}
+.npPvListHead {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 2px 8px;
+    border-bottom: 1px solid #F0ECF8;
+}
+.npPvListTitle {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 600;
+    color: #4A3D6B;
+}
+.npPvListCount {
+    flex: 0 0 auto;
+    font-size: 10.5px;
+    color: #8B7FB0;
+}
+.npPvArticleList {
+    padding: 4px 0 8px;
+}
+.npPvArticle {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    width: 100%;
+    padding: 7px 8px;
+    border: 0;
+    border-bottom: 1px solid #F4F0FA;
+    border-radius: 6px;
+    background: transparent;
+    color: #3F3556;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+}
+.npPvArticle:hover {
+    background: linear-gradient(135deg, #F6F0FF 0%, #EDE5FA 100%);
+}
+.npPvArtNum {
+    flex: 0 0 auto;
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    background: #EFE8FB;
+    color: #6B5AA8;
+    font-size: 10px;
+    line-height: 19px;
+    text-align: center;
+}
+.npPvArtName {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.npPvArtHits {
+    flex: 0 0 auto;
+    font-size: 10px;
+    color: #8B7FB0;
+}
+.npPrevLegendBar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px 4px;
+    flex: 0 0 auto;
+    min-height: 14px;
+}
+.npPrevLegendBar .npPrevHint {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    font-size: 10.5px;
+    color: #8A7CA8;
+}
+.npAttachZoom {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex: 0 0 auto;
+}
+.npAttachZoom[hidden] { display: none !important; }
+.npAttachZoomLabel {
+    min-width: 44px;
+    padding: 0 5px;
+    font-variant-numeric: tabular-nums;
+}
+.npMvImageBody {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+.npMvImageBody img {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+/* 隐藏字符覆盖层：只做视觉标记，不改正文 */
+#notepadPanel .npEditorHost {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+}
+#notepadPanel .npEditorHost > .notepadEditor {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+#notepadPanel .npInvisLayer {
+    position: absolute;
+    inset: 0;
+    display: none;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 7;
+}
+#notepadPanel .npEditorHost.npInvisOn .npInvisLayer {
+    display: block;
+}
+#notepadPanel .npInvis {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    font: 11px/1 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    color: #8FA6B8;
+    opacity: .95;
+    white-space: nowrap;
+    user-select: none;
+}
+
+/* ---------- PDF 页内预览（pdf.js 逐页渲染） ---------- */
+.npFvPdfHost,
+.npPdfBody {
+    display: block;
+    position: relative;
+    min-height: 240px;
+    background: #E9EDF1;
+}
+.npFvView > .npFvPdfHost {
+    height: calc(100% - 66px);
+    min-height: 320px;
+}
+.npFvPdfBar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 36px;
+    background: #FBFDFC;
+    border-bottom: 1px solid #DDE8E2;
+}
+.npFvPdfBar button {
+    height: 24px;
+    padding: 0 10px;
+    border: 1px solid #CFDCD5;
+    border-radius: 6px;
+    background: #FFF;
+    color: #2E6B5E;
+    font-size: 12px;
+    cursor: pointer;
+}
+.npFvPdfBar button:hover:not(:disabled) { background: #E6F5EC; }
+.npFvPdfBar button:disabled { opacity: .45; cursor: default; }
+.npFvPdfPage {
+    min-width: 56px;
+    text-align: center;
+    font-size: 12px;
+    color: #5A7A6E;
+}
+.npPdfView {
+    position: absolute;
+    inset: 0;
+    overflow: auto;
+    padding: 10px 0 18px;
+    box-sizing: border-box;
+    background: #E9EDF1;
+}
+.npPdfPages {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+.npPdfPage {
+    background: #FFFFFF;
+    box-shadow: 0 1px 6px rgba(40, 50, 70, .18);
+    line-height: 0;
+}
+.npPdfPage canvas { display: block; }
+.npPdfError {
+    padding: 18px 12px;
+    color: #8C5B5B;
+    font-size: 12px;
+    font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+/* 附件查看器里的 PDF：铺满正文区，不再受 iframe 最小高度限制 */
+.npAttachDocBody.npPdfBody { padding: 0; overflow: hidden; }
+.npAttachViewerStage.pdfmode { background: #E9EDF1; }
+/* 多窗预览：本地 PDF 占满窗口正文区 */
+.npMvDocInner .npFvFileBody.npMvPdfBody {
+    height: calc(100% - 30px);
+    min-height: 260px;
+    padding: 0;
+}
+.npMvDocInner .npPdfBody { height: 100%; }
