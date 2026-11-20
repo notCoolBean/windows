@@ -257,7 +257,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers(); self.wfile.write(data)
     def do_GET(self):
         if self.headers.get('Host')!=ORIGIN[7:]: return self.send_error(403)
-        files={'/':('index.html','text/html; charset=utf-8'),'/ui.js':('ui.js','application/javascript'),'/ui.css':('ui.css','text/css')}
+        files={'/logo.png':('logo.png','image/png'),'/':('index.html','text/html; charset=utf-8'),'/ui.js':('ui.js','application/javascript'),'/ui.css':('ui.css','text/css')}
         if self.path not in files: return self.send_error(404)
         name,typ=files[self.path]; data=(ROOT/'web'/name).read_bytes()
         if self.path=='/': data=data.replace(b'__SESSION_KEY__',KEY.encode())

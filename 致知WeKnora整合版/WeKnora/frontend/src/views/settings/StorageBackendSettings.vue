@@ -457,7 +457,7 @@ onMounted(load)
   .provider-card-badge-color(#e55a00);
 }
 .backend-card--ks3 .backend-card__badge {
-  .provider-card-badge-color(#07a050);
+  .provider-card-badge-color(#0842ad);
 }
 .backend-card--obs .backend-card__badge {
   .provider-card-badge-color(#ce1126);

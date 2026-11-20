@@ -879,7 +879,7 @@ onMounted(async () => {
   .provider-card-badge-color(#0089ff);
 }
 .store-card--weaviate .store-card__badge {
-  .provider-card-badge-color(#07a050);
+  .provider-card-badge-color(#0842ad);
 }
 .store-card--elasticsearch .store-card__badge,
 .store-card--elasticfaiss .store-card__badge {

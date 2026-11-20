@@ -38,7 +38,7 @@ function showModel(model) {
   el('chooseModel').textContent=model.ready?'更换模型':'导入模型';
   el('modelState').textContent=model.ready?model.name+' · 已就绪':'首次使用，请选择本机的 GGUF 语言模型。';
 }
-el('chooseModel').onclick=()=>status('请从 WeKnora 左侧「离线模型」导入或切换模型。');
+el('chooseModel').onclick=()=>status('请从 致知左侧「离线模型」导入或切换模型。');
 el('modelFile').onchange=async event=>{
   const file=event.target.files[0];
   event.target.value='';

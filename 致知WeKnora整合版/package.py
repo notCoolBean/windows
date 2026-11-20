@@ -20,39 +20,11 @@ WIN_SUITE = WORKSPACE / '致知离线工作台'
 
 
 def office_files(dest):
-    dest.mkdir(parents=True, exist_ok=True)
-    if dest.resolve() != (ROOT / 'office').resolve():
-        shutil.copy2(ROOT / 'office/bridge.py', dest)
-        shutil.copy2(ROOT / 'office/parse_document.py', dest)
-        shutil.copytree(ROOT / 'office/vendor', dest / 'vendor', dirs_exist_ok=True,
-                        ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
-    for folder in ('多维分析','致知笔记','记事本','资料查询'):
-        shutil.copytree(WIN_SUITE / '应用' / folder, dest / 'legacy' / folder, dirs_exist_ok=True,
-                        ignore=shutil.ignore_patterns('.DS_Store','__pycache__','*.pyc'))
-    for tool, source, main in [
-        ('writer', WORKSPACE / '文章仿写版/源码', 'writer.py'),
-        ('office', WIN_SUITE, 'suite.py'),
-    ]:
-        target = dest / tool
-        target.mkdir(exist_ok=True)
-        shutil.copy2(source / main, target)
-        if tool == 'office':
-            script = (target / main).read_text()
-            script = script.replace("request=urllib.request.Request(api+'/v1/chat/completions'", "request=urllib.request.Request((api.rsplit('/',1)[0]+'/vision' if image else api)+'/v1/chat/completions'")
-            (target / main).write_text(script)
-        shutil.copy2(source / 'rag.py', target)
-        shutil.copytree(source / 'web', target / 'web', dirs_exist_ok=True)
-        for path in (target / 'web').glob('*'):
-            if path.suffix not in ('.html', '.js') or path.name == 'editor.js':
-                continue
-            text = path.read_text()
-            for name in ('ui.js', 'ui.css', 'editor.js', 'api', 'model'):
-                text = text.replace('"/' + name + '"', '"./' + name + '"')
-                text = text.replace("'/" + name + "'", "'./" + name + "'")
-            if tool == 'writer' and path.name == 'ui.js':
-                text = text.replace("el('chooseModel').onclick=()=>el('modelFile').click();",
-                                    "el('chooseModel').onclick=()=>status('请从 WeKnora 左侧「离线模型」导入或切换模型。');")
-            path.write_text(text)
+    source = ROOT / 'office'
+    if dest.resolve() == source.resolve():
+        return
+    shutil.copytree(source, dest, dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns('__pycache__', '*.pyc', '.DS_Store', '*.sqlite3*', '*.log'))
 
 
 def common(dest):

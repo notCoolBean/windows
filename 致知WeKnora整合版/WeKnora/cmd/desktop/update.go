@@ -129,7 +129,7 @@ func checkUpdate(ctx context.Context, currentVersion string, showUpToDate bool, 
 					return
 				}
 
-				msg := fmt.Sprintf("A new version of WeKnora Lite is available!\n\nCurrent version: %s\nLatest version: %s\n\nWould you like to download it now?", currentVersion, latestVersion)
+				msg := fmt.Sprintf("A new version of 致知 is available!\n\nCurrent version: %s\nLatest version: %s\n\nWould you like to download it now?", currentVersion, latestVersion)
 				choice, _ := wailsruntime.MessageDialog(ctx, wailsruntime.MessageDialogOptions{
 					Type:          wailsruntime.InfoDialog,
 					Title:         "Update Available",
@@ -153,7 +153,7 @@ func checkUpdate(ctx context.Context, currentVersion string, showUpToDate bool, 
 			wailsruntime.MessageDialog(ctx, wailsruntime.MessageDialogOptions{
 				Type:          wailsruntime.InfoDialog,
 				Title:         "Up to Date",
-				Message:       fmt.Sprintf("You are using the latest version of WeKnora Lite.\n\nCurrent version: %s", currentVersion),
+				Message:       fmt.Sprintf("You are using the latest version of 致知.\n\nCurrent version: %s", currentVersion),
 				Buttons:       []string{"OK"},
 				DefaultButton: "OK",
 			})
@@ -290,7 +290,7 @@ func downloadAndInstall(ctx context.Context, url string, filename string, curren
 		choice, _ := wailsruntime.MessageDialog(ctx, wailsruntime.MessageDialogOptions{
 			Type:          wailsruntime.InfoDialog,
 			Title:         "Update Ready",
-			Message:       fmt.Sprintf("WeKnora Lite %s has been downloaded successfully.\n\nWould you like to restart and install the new version now?", latestVersion),
+			Message:       fmt.Sprintf("致知 %s has been downloaded successfully.\n\nWould you like to restart and install the new version now?", latestVersion),
 			Buttons:       []string{"Restart Now", "Later"},
 			DefaultButton: "Restart Now",
 		})

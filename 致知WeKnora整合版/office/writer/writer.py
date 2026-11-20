@@ -210,7 +210,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.headers.get('Host') != origin[7:]:
             return self.send_error(403)
-        files = {'/':('index.html','text/html'), '/ui.css':('ui.css','text/css'), '/ui.js':('ui.js','application/javascript'), '/editor.js':('editor.js','application/javascript')}
+        files = {'/logo.png':('logo.png','image/png'), '/':('index.html','text/html'), '/ui.css':('ui.css','text/css'), '/ui.js':('ui.js','application/javascript'), '/editor.js':('editor.js','application/javascript')}
         if self.path not in files:
             return self.send_error(404)
         name, mime = files[self.path]

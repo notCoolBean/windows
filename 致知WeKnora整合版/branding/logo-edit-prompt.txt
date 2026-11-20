@@ -1,0 +1,8 @@
+工具：内置 image_gen（透明背景编辑模式），输出 branding/logo.png。
+界面品牌蓝色：#0B52D2；PNG 保留真实 alpha 通道。
+
+首次编辑提示词：
+Edit target: the supplied existing Chinese app logo. Precise background-removal edit only. Remove all dark navy/black area and the outer blue glow outside the main blue rounded-square tile. Everything outside the rounded-square tile must be genuinely transparent (PNG alpha), including the corners; no checkerboard drawn into the image, no white matte, no shadow or outer glow. Preserve the existing blue rounded-square shape, its proportions and subtle blue gradient, and the exact white handwritten Chinese glyph 知 unchanged in shape, stroke layout and placement. Do not redesign or typeset the glyph. Tight square framing with only a small transparent margin around the tile. Output a clean high-resolution transparent PNG suitable as an application icon. Match the original blue hue, approximately #1859C6. No new text, border, decorations or additional objects.
+
+最终清理提示词：
+Clean up this exact app icon cutout. Keep the blue rounded square and the white Chinese 知 glyph EXACTLY as they are. Remove EVERY stray blue speck, particle, noise, fringe and residual glow outside the rounded square, especially above its top edge and below its bottom edge. The outside region must be completely clear transparent PNG alpha (zero opacity), not black or white. The main rounded-square contour must be smooth, clean, antialiased. No shadow, glow, outline or extra shapes. Do not redraw, retype, recolor or change the glyph. Final production icon, transparent background.

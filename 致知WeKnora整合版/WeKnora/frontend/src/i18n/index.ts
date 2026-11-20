@@ -229,7 +229,7 @@ watch(
 
 if (typeof window !== 'undefined' && !isEmbedSurface()) {
   void initI18n().catch((err) => {
-    console.warn('[WeKnora] Initial locale bundle failed to preload; will retry on bootstrap:', err)
+    console.warn('[致知] Initial locale bundle failed to preload; will retry on bootstrap:', err)
   })
 }
 

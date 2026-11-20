@@ -291,7 +291,8 @@ const userInfo = computed(() => ({
 }))
 
 const userName = computed(() => userInfo.value.username)
-const userEmail = computed(() => userInfo.value.email)
+const userEmail = computed(() => authStore.isLiteMode && userInfo.value.email === 'admin@weknora.local'
+  ? '致知本地账户' : userInfo.value.email)
 const userAvatar = computed(() => userInfo.value.avatar)
 
 // 用户名首字母（用于无头像时显示）
@@ -520,7 +521,7 @@ const openDocs = () => {
 // 打开 GitHub
 const openGithub = () => {
   menuVisible.value = false
-  window.open('https://github.com/Tencent/WeKnora', '_blank')
+  window.open('https://github.com/notCoolBean/windows', '_blank')
 }
 
 // 注销

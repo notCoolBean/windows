@@ -1,7 +1,7 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "WeKnora Lite",
-  "outputfilename": "WeKnora Lite",
+  "name": "致知",
+  "outputfilename": "致知",
   "frontend:dir": "../../frontend",
   "wailsjsdir": "../../frontend/src",
   "build:tags": "desktop",
@@ -11,10 +11,10 @@
   },
   "info": {
     "companyName": "Tencent",
-    "productName": "WeKnora Lite",
+    "productName": "致知",
     "productVersion": "1.0.0",
     "copyright": "Copyright 2026 Tencent",
-    "comments": "WeKnora Desktop Edition"
+    "comments": "致知桌面版"
   },
   "mac": {
     "category": "public.app-category.productivity",

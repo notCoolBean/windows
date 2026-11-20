@@ -85,7 +85,7 @@ class OfficeBridgeTest(unittest.TestCase):
                         page=response.read().decode()
                         self.assertIn("frame-ancestors 'self'",response.headers['Content-Security-Policy'])
                     key=re.search(r'name="?session"? content="([^"]+)"',page).group(1)
-                    for asset in ('ui.js','ui.css'):
+                    for asset in ('ui.js','ui.css','logo.png'):
                         with client.open(origin+'/'+asset,timeout=5) as response:
                             self.assertEqual(response.status,200)
                     payload=json.dumps({'action':'history' if tool=='writer' else 'list'}).encode()

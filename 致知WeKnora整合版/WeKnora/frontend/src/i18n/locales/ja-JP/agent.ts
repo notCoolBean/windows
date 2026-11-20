@@ -23,7 +23,7 @@ export default {
     }
   },
   assistant: {
-    title: 'WeKnora アシスタント',
+    title: '致知 アシスタント',
     newConversation: '新しい会話',
     history: '会話履歴',
     untitledConversation: '無題の会話',
@@ -37,10 +37,10 @@ export default {
     },
     welcomeTitle: '何をお手伝いしましょうか？',
     agentWelcomeDesc: 'このエージェントの設定を確認したり、モデルを変更したり、検索可能なナレッジベースを確認できます。',
-    welcomeDesc: 'WeKnora の使い方、ナレッジやドキュメントの整理、エージェント・ツール・自動化の設定をお手伝いします。',
+    welcomeDesc: '致知 の使い方、ナレッジやドキュメントの整理、エージェント・ツール・自動化の設定をお手伝いします。',
     help: {
       label: 'アシスタントの説明',
-      title: 'WeKnora アシスタントにできること',
+      title: '致知 アシスタントにできること',
       identity: 'アシスタントはあなた自身として動きます。見たり変更したりできる範囲は、このスペースでのあなたの役割までです。',
       page: '開くと現在のページが付きます。画面の内容を整理したり、エージェントや自動化を設定したり、フォームに記入したりできます。ボタンを押したり保存したりはしません。',
       access: '入力欄の下で権限を切り替えられます。閲覧のみ、変更前に確認、回復できる変更は自動実行。削除は必ず確認が必要で、管理者が定めた上限は超えられません。'
@@ -130,8 +130,8 @@ export default {
         q3: 'What should I check if Ollama will not connect?'
       },
       weknoracloud: {
-        description: 'I can explain which models WeKnora Cloud offers, and how to bind and choose them.',
-        q1: 'Which models does WeKnora Cloud provide?',
+        description: 'I can explain which models 致知 Cloud offers, and how to bind and choose them.',
+        q1: 'Which models does 致知 Cloud provide?',
         q2: 'How do I enable or bind a Cloud account?',
         q3: 'When should I use Cloud models versus ones I connect myself?'
       },
@@ -256,14 +256,14 @@ export default {
         q3: 'Is there a ready-made request example?'
       },
       'integration-mcpserver': {
-        description: 'I can explain how to expose WeKnora as an MCP server, and which tools it offers.',
-        q1: 'How do I offer WeKnora as an MCP server?',
+        description: 'I can explain how to expose 致知 as an MCP server, and which tools it offers.',
+        q1: 'How do I offer 致知 as an MCP server?',
         q2: 'How does an external client connect?',
         q3: 'Which tools does this server expose?'
       },
       'integration-cli': {
         description: 'I can walk you through installing and signing in to the CLI, and the common commands.',
-        q1: 'How do I install and sign in to the WeKnora CLI?',
+        q1: 'How do I install and sign in to the 致知 CLI?',
         q2: 'What knowledge-base and chat operations can the CLI do?',
         q3: 'What are the most useful commands?'
       },
@@ -274,8 +274,8 @@ export default {
         q3: 'Where does text I select in the extension get sent?'
       },
       'integration-claw': {
-        description: 'I can explain how to connect WeKnora to Claw, and which skill to install.',
-        q1: 'How do I connect WeKnora to Claw?',
+        description: 'I can explain how to connect 致知 to Claw, and which skill to install.',
+        q1: 'How do I connect 致知 to Claw?',
         q2: 'Which skill do I need to install?',
         q3: 'What can I do in Claw after it is connected?'
       }
@@ -429,7 +429,7 @@ export default {
       documentSummary: 'このドキュメントの重要な結論は何ですか？',
       failedDocuments: 'このナレッジベースで解析に失敗したドキュメントは？',
       recentActivity: '最近アップロードまたは更新されたドキュメントはどれですか？',
-      formats: 'WeKnora はどのドキュメント形式に対応していますか？',
+      formats: '致知 はどのドキュメント形式に対応していますか？',
       createWiki: 'Wiki ナレッジベースの作り方は？',
       agents: 'これらのエージェントはそれぞれどんな質問に向いていますか？',
       messageSources: 'この回答の根拠は何ですか？',
@@ -441,7 +441,7 @@ export default {
       modelSetup: 'ほかにどのモデルを設定する必要がありますか？',
       mcpSetup: 'MCP サービスを接続するには？',
       releaseHighlights: '現在のバージョンでは主に何が変わりましたか？',
-      gettingStarted: 'WeKnora を初めて使う場合、何から設定すればよいですか？',
+      gettingStarted: '致知 を初めて使う場合、何から設定すればよいですか？',
       workflow: 'ナレッジベース、エージェント、自動化はどう組み合わせて使えますか？',
       knowledgeOverview: 'それぞれのナレッジベースでどんな情報を探せますか？',
       knowledgeType: 'ドキュメント、FAQ、Wiki はどう使い分ければよいですか？',
@@ -488,9 +488,9 @@ export default {
   automation: {
     conversationNotice: 'この会話は自動化タスクが実行します。手動でメッセージは送信できません。保留中のリクエストは上で対応してください。',
     title: 'オートメーション',
-    description: 'WeKnora アシスタントがあなたに代わって定期的にタスクを実行します。結果と承認待ちの操作を通知します。',
+    description: '致知 アシスタントがあなたに代わって定期的にタスクを実行します。結果と承認待ちの操作を通知します。',
     add: '新規オートメーション',
-    addHint: 'WeKnora アシスタントに作成を頼むこともできます',
+    addHint: '致知 アシスタントに作成を頼むこともできます',
     paused: '一時停止中',
     scheduleEnded: '終了',
     scheduleEndedHint: 'この一回限りのスケジュールは終了しました。今すぐ実行するか、実行日時を変更してから再開してください。',
@@ -542,7 +542,7 @@ export default {
       sections: {
         basic: {
           title: '基本情報',
-          desc: 'WeKnora アシスタントがタスクを実行します。他のエージェントに委任する場合は、タスクに委任先と作業内容を記載してください。'
+          desc: '致知 アシスタントがタスクを実行します。他のエージェントに委任する場合は、タスクに委任先と作業内容を記載してください。'
         },
         schedule: {
           title: '実行スケジュール',
@@ -1137,7 +1137,7 @@ export default {
     },
     hostApproval: {
       titleDelete: 'ファイルを削除する前に確認してください',
-      titleDenied: 'WeKnora が次のディレクトリへのアクセスを求めています',
+      titleDenied: '致知 が次のディレクトリへのアクセスを求めています',
       titleGeneric: '確認が必要です',
       command: 'コマンド',
       cwd: 'ディレクトリ',
