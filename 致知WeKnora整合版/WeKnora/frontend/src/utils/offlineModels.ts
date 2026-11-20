@@ -9,6 +9,7 @@ export interface OfflineModel {
   kind: 'KnowledgeQA' | 'Embedding' | 'VLLM'
   size: number
   dimension: number
+  context_window?: number
 }
 export interface OfflineCatalog {
   models: OfflineModel[]
@@ -41,7 +42,7 @@ export async function syncOfflineModels(catalog?: OfflineCatalog): Promise<Offli
       source: 'remote', description,
       parameters: {
         base_url: `${catalog.base_url}/${model.id}/v1`, provider: 'generic',
-        context_window: 8192, max_concurrency: 1,
+        context_window: model.context_window ?? 8192, max_concurrency: 1,
         ...(model.kind === 'Embedding' ? { embedding_parameters: { dimension: model.dimension } } : {}),
         ...(model.kind === 'VLLM' ? { interface_type: 'openai', supports_vision: true } : {}),
       },

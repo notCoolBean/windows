@@ -10,6 +10,7 @@ Git 仓库保存源码、图标、许可证与构建脚本，不包含多 GB 模
 
 - Windows 10/11 x64：完整解压 `dist/Zhizhi-WeKnora-Windows-x64-Full.zip`，在解压后的 `Windows-Full` 目录运行 `Zhizhi-WeKnora-Setup-x64.exe`。必须保留安装器旁的 `bundled-models` 文件夹；不要在压缩包内直接运行安装器。安装器包含 WebView2 独立离线安装器和 VC++ 运行库，不需要 Docker、Python 或 Go 开发环境。
 - Apple 芯片 Mac，macOS 13.3 及以上：打开 `dist/Zhizhi-WeKnora-macOS-Apple.dmg`，将应用拖到 Applications。此构建使用本地临时签名，未经 Apple 公证。
+- 麒麟 V10 ARM64（飞腾 D2000/8、8 GB 内存）：使用 `dist/麒麟V10-飞腾ARM64/` 中独立的 `.run` 程序安装包和文字与检索模型 ZIP。以普通用户运行 `sh 致知-麒麟V10-ARM64-安装.run`，解压模型 ZIP 后运行其中的 `sh 导入模型.sh`，再从应用菜单启动。要求 glibc ≥ 2.31、X11 桌面或 XWayland；不需要联网、sudo、Docker 或开发工具。这个模型包仅含 Qwen 文字和 BGE 检索模型，不含视觉权重。目标麒麟国防版的基础库版本与实机表现仍待核对。
 - 打开应用，等待首次模型校验与初始化完成。应用自动注册 Qwen3-4B-Instruct-2507 文字模型、MiniCPM-V4 视觉模型和 BGE 中文向量模型（512 维），无需配置接口地址或密钥。后续启动复用已有模型，不覆盖用户选定的办公模型。
 - 新建知识库时选择已就绪的文字、向量模型，然后上传资料；对话页可直接选择本地文字模型聊天。「离线模型」仍支持手动导入其他 GGUF，视觉模型需配套 mmproj 文件。旧知识库保持绑定原向量模型；更换时请新建知识库并重新入库。
 - 侧边栏「文章仿写」可直接输入或粘贴范文，也可上传 DOCX、TXT、Markdown 文件（最大 8 MB），填写新文章主题与要求后，使用本地模型分析风格并生成新稿。生成后可编辑、复制或导出 Word/TXT。
@@ -35,7 +36,13 @@ WeKnora 数据位于 macOS 的 `~/Library/Application Support/致知知识工作
 
 交付目标为 16 GB 内存、无独立 GPU 的 `amd64`、`arm64`、`loongarch64` 三种架构。三种包复用相同的 Qwen 文字、BGE 向量及 MiniCPM 视觉权重；推理引擎、Python、桌面及数据库运行库须分别构建。Linux 已明确禁用 GPU 卸载，沿用单推理进程调度；知识库、模型和办公数据均写入 `${XDG_CONFIG_HOME:-~/.config}/致知知识工作台/`。16 GB 是目标配置，不代表已在所有 CPU 上验证生成速度或峰值内存。
 
-当前 **尚未生成可交付的 Linux 安装包**。主界面保留 Wails/WeKnora 桌面方案，仍需确定首批统信/麒麟版本与运行库基线并完成实机验收。特别是龙芯：当前 DuckDB Go 依赖没有龙芯预编译库，需额外构建与 Go 绑定匹配的 DuckDB 1.5.2；旧 MIPS 龙芯不属于 `loongarch64`，LoongArch 新旧 ABI 也不能只凭架构名视为兼容。
+已生成 **麒麟 V10 ARM64 待实机验收包**，依据首台飞腾 D2000/8、实际约 8 GB 内存的配置单，采用 CPU、6 线程、文字上下文 4096、向量上下文及批量 512、单推理进程。文字和检索模型单独分发，程序更新不需重新传送权重。安装到 `~/.local/share/zhizhi/program`，模型导入目录为 `~/.local/share/zhizhi/bundled-models`；知识库与运行时模型仍在上述用户配置目录。建议预留至少 12 GB 空间，首次初始化会另存模型副本。安装器保留上个程序版本及用户资料。
+
+ARM64 包在 Ubuntu 20.04 / glibc 2.31 基线原生构建，私有打包 GTK3、WebKitGTK 2.38.6、C++ 运行库、Python 3.11.18 和通用 ARMv8-A llama.cpp，不安装或替换目标电脑系统库。旧 WebKit 的自定义 URI 不支持读取 POST 请求体，因此仅对构建副本中的 Wails 2.12.0 增加本机回环 HTTP 适配，保留原生调用来源校验，并拒绝其他 Host/Origin；界面端口按用户保存以维持本地存储。WebKit 的两个辅助进程路径改为包内路径，随包提供对应源码与修改脚本。
+
+`linux/build-arm64-runtime.sh` 在专用 ARM64 构建环境编译，`linux/package-arm64.py` 生成程序安装器，`linux/package-models.py` 生成分离模型包。下载的工具链、Python、llama.cpp 和 C++ 运行库校验值已固定在脚本中。程序包不含 GGUF 权重。ARM64 二进制依赖检查、普通账户安装、模型导入、原生桌面启动和真实 Qwen/BGE 推理已在隔离容器通过；断开容器网络后，升级重启保留模型与账户，且通过原生页面转发完成真实文章仿写。这不代表已经在飞腾或麒麟国防版实机验收。
+
+AMD64 和 LoongArch64 的完整 Linux 包尚未生成。特别是龙芯：当前 DuckDB Go 依赖没有龙芯预编译库，需额外构建与 Go 绑定匹配的 DuckDB 1.5.2；旧 MIPS 龙芯不属于 `loongarch64`，LoongArch 新旧 ABI 也不能只凭架构名视为兼容。
 
 `linux/check-system.sh` 可在目标电脑离线运行，仅读取系统版本、架构、内存、glibc、ELF 标志与桌面库信息，不联网、不改系统、不要求管理员权限：
 
@@ -51,7 +58,7 @@ python3 build.py linux-arm64
 ZZ_DUCKDB_LIB_DIR=/path/to/duckdb/lib python3 build.py linux-loongarch64
 ```
 
-Linux ARM64 原生、AMD64 模拟执行的断网容器已通过模型管理与 CPU 参数测试；ARM64 容器还通过办公页面、鉴权、进程退出、用户数据路径和文档解析测试。这不等同于完整桌面、真实模型推理或国产机器验收。amd64/arm64 的 llama.cpp 构建须避免依赖构建机专属指令集；龙芯库须匹配目标 ABI。最终验收应覆盖断网安装、首次模型初始化、资料入库、带引用问答、办公生成、重启及卸载保留数据。
+Linux ARM64 原生、AMD64 模拟执行的断网容器已通过模型管理与 CPU 参数测试；ARM64 容器还通过办公页面、鉴权、进程退出、用户数据路径和文档解析测试。国产机器最终验收应覆盖断网安装、首次模型初始化、资料入库、带引用问答、办公生成、重启及卸载保留数据。
 
 ### 已有 Windows / macOS 构建
 

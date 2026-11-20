@@ -19,18 +19,20 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
 type Model struct {
-	ID         string `json:"id"`
-	Name       string `json:"name"`
-	Kind       string `json:"kind"`
-	Size       int64  `json:"size"`
-	Dimension  int    `json:"dimension"`
-	Projection string `json:"projection,omitempty"`
+	ID            string `json:"id"`
+	Name          string `json:"name"`
+	Kind          string `json:"kind"`
+	Size          int64  `json:"size"`
+	Dimension     int    `json:"dimension"`
+	Projection    string `json:"projection,omitempty"`
+	ContextWindow int    `json:"context_window,omitempty"`
 }
 
 type Catalog struct {
@@ -86,7 +88,21 @@ func New(dir, engine string) (*Manager, error) {
 func (m *Manager) Catalog() Catalog {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	return Catalog{Models: append([]Model{}, m.models...), Primary: m.primary, BaseURL: m.base, Key: m.key}
+	models := append([]Model{}, m.models...)
+	for i := range models {
+		models[i].ContextWindow = contextWindow(models[i].Kind)
+	}
+	return Catalog{Models: models, Primary: m.primary, BaseURL: m.base, Key: m.key}
+}
+
+func contextWindow(kind string) int {
+	if runtime.GOOS == "linux" && os.Getenv("ZZ_OFFLINE_LOW_MEMORY") == "1" {
+		if kind == "Embedding" {
+			return 512
+		}
+		return 4096
+	}
+	return 8192
 }
 
 func (m *Manager) save() error {
@@ -281,9 +297,20 @@ func (m *Manager) start(ctx context.Context, model Model) error {
 	port := strings.Split(listener.Addr().String(), ":")[1]
 	listener.Close()
 	digest := strings.Split(model.ID, "-")[1]
-	args := []string{"-m", filepath.Join(m.dir, digest+".gguf"), "--alias", "local", "--offline", "--host", "127.0.0.1", "--port", port, "--api-key", m.key, "--no-webui", "--no-agent", "--no-webui-mcp-proxy", "-np", "1", "-c", "8192", "--no-warmup"}
+	lowMemory := runtime.GOOS == "linux" && os.Getenv("ZZ_OFFLINE_LOW_MEMORY") == "1"
+	contextSize, embeddingBatch := strconv.Itoa(contextWindow(model.Kind)), "8192"
+	if lowMemory {
+		embeddingBatch = "512"
+	}
+	args := []string{"-m", filepath.Join(m.dir, digest+".gguf"), "--alias", "local", "--offline", "--host", "127.0.0.1", "--port", port, "--api-key", m.key, "--no-webui", "--no-agent", "--no-webui-mcp-proxy", "-np", "1", "-c", contextSize, "--no-warmup"}
+	if lowMemory {
+		args = append(args, "-t", "6", "-tb", "6")
+		if model.Kind != "Embedding" {
+			args = append(args, "-b", "256", "-ub", "128")
+		}
+	}
 	if model.Kind == "Embedding" {
-		args = append(args, "--embedding", "-ub", "8192", "-b", "8192")
+		args = append(args, "--embedding", "-ub", embeddingBatch, "-b", embeddingBatch)
 	}
 	if model.Projection != "" {
 		args = append(args, "--mmproj", filepath.Join(m.dir, model.Projection+".gguf"))

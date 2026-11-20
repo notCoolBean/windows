@@ -25,6 +25,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/linux"
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
 
 	"github.com/Tencent/WeKnora/internal/config"
@@ -147,12 +148,16 @@ window.addEventListener('mousedown',function(e){
 },true);
 
 // Intercept external link clicks and window.open so they open in the system browser
+function isExternalHttp(url){
+  try{var target=new URL(url,window.location.href);return /^https?:$/.test(target.protocol)&&target.origin!==window.location.origin;}
+  catch(_){return false;}
+}
 document.addEventListener('click',function(e){
   var el=e.target;
   while(el&&el.tagName!=='A')el=el.parentElement;
   if(!el||!el.href)return;
   var href=el.href;
-  if(href.indexOf('http://')===0||href.indexOf('https://')===0){
+  if(isExternalHttp(href)){
     if(window.runtime&&window.runtime.BrowserOpenURL){
       e.preventDefault();
       e.stopPropagation();
@@ -163,7 +168,7 @@ document.addEventListener('click',function(e){
 
 var origOpen=window.open;
 window.open=function(url){
-  if(url&&(typeof url==='string')&&(url.indexOf('http://')===0||url.indexOf('https://')===0)){
+  if(url&&(typeof url==='string')&&isExternalHttp(url)){
     if(window.runtime&&window.runtime.BrowserOpenURL){
       window.runtime.BrowserOpenURL(url);
       return null;
@@ -388,6 +393,7 @@ func main() {
 	// Wait for the backend URL to be set
 	targetURL, _ := url.Parse(app.backendURL)
 	proxy := desktopAPIProxy(targetURL)
+	desktopIcon, _ := os.ReadFile(filepath.Join(configRoot, "zhizhi.png"))
 
 	// Start Wails application
 	// We use a Reverse Proxy to seamlessly proxy Wails' frontend to our Go backend
@@ -425,6 +431,10 @@ func main() {
 			TitleBar:             mac.TitleBarHiddenInset(),
 			WebviewIsTransparent: false,
 			WindowIsTranslucent:  false,
+		},
+		Linux: &linux.Options{
+			Icon: desktopIcon, ProgramName: "zhizhi",
+			WebviewGpuPolicy: linux.WebviewGpuPolicyNever,
 		},
 	})
 	if err != nil {
